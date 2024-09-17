@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --account=stf218
-#SBATCH --nodes=256
+#SBATCH --nodes=2048
 #SBATCH --gpus-per-node=8
 #SBATCH --cpus-per-task=8
 #SBATCH --time=00:30:00
@@ -29,8 +29,6 @@ export TORCH_NCCL_BLOCKING_WAIT=1
 
 export HF_HOME="/lustre/orion/stf218/scratch/emin/huggingface"
 export HF_DATASETS_CACHE="/lustre/orion/stf218/scratch/emin/huggingface"
-export HF_HUB_ETAG_TIMEOUT=600
-export HF_HUB_DOWNLOAD_TIMEOUT=600
 export HF_HUB_OFFLINE=1
 export GPUS_PER_NODE=8
 
