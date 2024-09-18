@@ -135,8 +135,7 @@ def main(job_config: JobConfig):
         pp_schedule, model_parts = models_pipelining_fns[model_name](model, pp_mesh, parallel_dims, job_config, device, model_config, loss_fn)
 
         # For PP with looped schedules, each item in model_parts is one stage-model-chunk.
-        # We need to iterate through model_parts to apply SPMD parallelisms, compilation,
-        # optimizer, and checkpointing
+        # We need to iterate through model_parts to apply SPMD parallelisms, compilation, optimizer, and checkpointing
         for m in model_parts:
             # apply SPMD-style PT-D techniques
             models_parallelize_fns[model_name](m, world_mesh, parallel_dims, job_config)
