@@ -28,11 +28,8 @@ class ModelArgs:
     ffn_dim_multiplier: Optional[float] = None
     norm_eps: float = 1e-5
     rope_theta: float = 10000
-
-    max_batch_size: int = 32
     max_seq_len: int = 2048
-    # If `True`, then each transformer block init uses its layer ID, and if
-    # `False`, each uses the total number of transformer blocks
+    # If `True`, then each transformer block init uses its layer ID, and if `False`, each uses the total number of transformer blocks
     depth_init: bool = True
     norm_type: str = "rmsnorm"
 
@@ -157,14 +154,10 @@ class Attention(nn.Module):
         self.n_rep = self.n_heads // self.n_kv_heads
         self.head_dim = model_args.dim // model_args.n_heads
 
-        self.wq = nn.Linear(
-            model_args.dim, model_args.n_heads * self.head_dim, bias=False
-        )
+        self.wq = nn.Linear(model_args.dim, model_args.n_heads * self.head_dim, bias=False)
         self.wk = nn.Linear(model_args.dim, self.n_kv_heads * self.head_dim, bias=False)
         self.wv = nn.Linear(model_args.dim, self.n_kv_heads * self.head_dim, bias=False)
-        self.wo = nn.Linear(
-            model_args.n_heads * self.head_dim, model_args.dim, bias=False
-        )
+        self.wo = nn.Linear(model_args.n_heads * self.head_dim, model_args.dim, bias=False)
 
     def init_weights(self, init_std: float):
         for linear in (self.wq, self.wk, self.wv):
@@ -209,9 +202,7 @@ class Attention(nn.Module):
 
         # we use casual mask for training
         output = F.scaled_dot_product_attention(xq, xk, xv, is_causal=True)
-        output = output.transpose(
-            1, 2
-        ).contiguous()  # (bs, seqlen, n_local_heads, head_dim)
+        output = output.transpose(1, 2).contiguous()  # (bs, seqlen, n_local_heads, head_dim)
         output = output.view(bs, seqlen, -1)
         return self.wo(output)
 
@@ -294,12 +285,8 @@ class TransformerBlock(nn.Module):
         self.layer_id = layer_id
         self.num_layers = model_args.n_layers
 
-        self.attention_norm = build_norm(
-            model_args.norm_type, dim=model_args.dim, eps=model_args.norm_eps
-        )
-        self.ffn_norm = build_norm(
-            model_args.norm_type, dim=model_args.dim, eps=model_args.norm_eps
-        )
+        self.attention_norm = build_norm(model_args.norm_type, dim=model_args.dim, eps=model_args.norm_eps)
+        self.ffn_norm = build_norm(model_args.norm_type, dim=model_args.dim, eps=model_args.norm_eps)
 
         if model_args.depth_init:
             self.weight_init_std = 0.02 / (2 * (self.layer_id + 1)) ** 0.5
@@ -373,9 +360,7 @@ class Transformer(nn.Module):
         for layer_id in range(model_args.n_layers):
             self.layers[str(layer_id)] = TransformerBlock(layer_id, model_args)
 
-        self.norm = build_norm(
-            model_args.norm_type, dim=model_args.dim, eps=model_args.norm_eps
-        )
+        self.norm = build_norm(model_args.norm_type, dim=model_args.dim, eps=model_args.norm_eps)
 
         self.output = nn.Linear(model_args.dim, model_args.vocab_size, bias=False)
         self.init_weights()
@@ -411,6 +396,7 @@ class Transformer(nn.Module):
                 a=-cutoff_factor * final_out_std,
                 b=cutoff_factor * final_out_std,
             )
+            print('initialized output')
 
     def _precompute_freqs_cis(self) -> torch.Tensor:
         return precompute_freqs_cis(

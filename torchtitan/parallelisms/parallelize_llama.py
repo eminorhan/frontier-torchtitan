@@ -47,10 +47,7 @@ def parallelize_llama(
     """
 
     if parallel_dims.tp_enabled:
-        if (
-            job_config.experimental.enable_async_tensor_parallel
-            and not job_config.training.compile
-        ):
+        if job_config.experimental.enable_async_tensor_parallel and not job_config.training.compile:
             raise RuntimeError("Async TP requires --training.compile")
         apply_tp(
             model,
@@ -66,10 +63,7 @@ def parallelize_llama(
     # turn on per-TransformerBlock compile after AC wrapping and before FSDP
     if job_config.training.compile:
         if job_config.model.norm_type == "fused_rmsnorm":
-            raise NotImplementedError(
-                "fused_rmsnorm is not compatible with torch.compile yet. "
-                "Please use rmsnorm or layernorm."
-            )
+            raise NotImplementedError("fused_rmsnorm is not compatible with torch.compile yet. Please use rmsnorm or layernorm.")
         apply_compile(model)
 
     if parallel_dims.dp_enabled:
@@ -83,9 +77,7 @@ def parallelize_llama(
                 model,
                 dp_mesh,
                 param_dtype=TORCH_DTYPE_MAP[job_config.training.mixed_precision_param],
-                reduce_dtype=TORCH_DTYPE_MAP[
-                    job_config.training.mixed_precision_reduce
-                ],
+                reduce_dtype=TORCH_DTYPE_MAP[job_config.training.mixed_precision_reduce],
                 tp_enabled=parallel_dims.tp_enabled,
                 pp_enabled=parallel_dims.pp_enabled,
             )
@@ -112,8 +104,7 @@ def apply_tp(
     enable_async_tp: bool,
 ):
     """Apply tensor parallelism."""
-    # 1. Parallelize the embedding and shard its outputs (which are the first
-    # transformer block's inputs)
+    # 1. Parallelize the embedding and shard its outputs (which are the first transformer block's inputs)
     # 2. Parallelize the root norm layer over the sequence dim
     # 3. Parallelize the final linear output layer
     parallelize_module(
@@ -194,10 +185,7 @@ def apply_tp(
         torch._inductor.config._micro_pipeline_tp = True
         enable_symm_mem_for_group(tp_mesh.get_group().group_name)
 
-    logger.info(
-        f"Applied {'Float8 ' if enable_float8 else ''}{'Async ' if enable_async_tp else ''}"
-        "Tensor Parallelism to the model"
-    )
+    logger.info(f"Applied {'Float8 ' if enable_float8 else ''}{'Async ' if enable_async_tp else ''} Tensor Parallelism to the model")
 
 
 # for selective op activation checkpointing
@@ -212,9 +200,7 @@ _save_list = {
 def _apply_ac_to_transformer_block(module: nn.Module, ac_config):
     valid_ac_modes = ("full", "selective")
     if ac_config.mode not in valid_ac_modes:
-        raise ValueError(
-            f"Invalid AC mode: {ac_config.mode}. Valid modes: {valid_ac_modes}"
-        )
+        raise ValueError(f"Invalid AC mode: {ac_config.mode}. Valid modes: {valid_ac_modes}")
 
     if ac_config.mode == "full":
         return ptd_checkpoint_wrapper(module, preserve_rng_state=False)
@@ -223,15 +209,9 @@ def _apply_ac_to_transformer_block(module: nn.Module, ac_config):
     use_op_sac = ac_config.selective_ac_option == "op"
     use_layer_sac = ac_config.selective_ac_option.isdigit()
     if not use_op_sac and not use_layer_sac:
-        raise ValueError(
-            f"Invalid selective AC option: {ac_config.selective_ac_option}. "
-            f"Valid options: 'op' or a positive int representing layer frequency"
-        )
+        raise ValueError(f"Invalid selective AC option: {ac_config.selective_ac_option}. Valid options: 'op' or a positive int representing layer frequency")
     if use_op_sac:
-        from torch.utils.checkpoint import (
-            CheckpointPolicy,
-            create_selective_checkpoint_contexts,
-        )
+        from torch.utils.checkpoint import CheckpointPolicy, create_selective_checkpoint_contexts
 
         def _get_custom_policy(meta):
             def _custom_policy(ctx, func, *args, **kwargs):
@@ -240,9 +220,7 @@ def _apply_ac_to_transformer_block(module: nn.Module, ac_config):
                 if func == torch.ops.aten.mm.default:
                     meta[mm_count_key] += 1
                 # Saves output of all compute ops, except every second mm
-                to_save = func in _save_list and not (
-                    func == torch.ops.aten.mm.default and meta[mm_count_key] % 2 == 0
-                )
+                to_save = func in _save_list and not (func == torch.ops.aten.mm.default and meta[mm_count_key] % 2 == 0)
                 return (
                     CheckpointPolicy.MUST_SAVE
                     if to_save
@@ -321,11 +299,8 @@ def apply_fsdp(
             # As an optimization, do not reshard after forward for the last
             # transformer block since FSDP would prefetch it immediately
             reshard_after_forward = int(layer_id) < len(model.layers) - 1
-        fully_shard(
-            transformer_block,
-            **fsdp_config,
-            reshard_after_forward=reshard_after_forward,
-        )
+        fully_shard(transformer_block, **fsdp_config, reshard_after_forward=reshard_after_forward)
+        
     fully_shard(model, **fsdp_config, reshard_after_forward=not pp_enabled)
 
 
@@ -337,9 +312,7 @@ def apply_ddp(
 ):
     if enable_compile:
         if enable_compiled_autograd:
-            torch._dynamo.config.optimize_ddp = (
-                "python_reducer_without_compiled_forward"
-            )
+            torch._dynamo.config.optimize_ddp = "python_reducer_without_compiled_forward"
         else:
             torch._dynamo.config.optimize_ddp = "ddp_optimizer"
 

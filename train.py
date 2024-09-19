@@ -67,6 +67,7 @@ def main(job_config: JobConfig):
     device = torch.device(f"cuda:{int(os.environ['LOCAL_RANK'])}")
     torch.cuda.set_device(device)
     utils.init_distributed(job_config)
+    
     # initialize GPU memory monitor and get peak flops for MFU calculation
     gpu_memory_monitor = build_gpu_memory_monitor()
     gpu_peak_flops = utils.get_peak_flops(gpu_memory_monitor.device_name)
@@ -129,6 +130,7 @@ def main(job_config: JobConfig):
     def loss_fn(pred, labels):
         return torch.nn.functional.cross_entropy(pred.flatten(0, 1), labels.flatten(0, 1))
 
+    print("first checkpoint")
     # apply parallelisms and initialization
     if parallel_dims.pp_enabled:
         # apply PT-D Pipeline Parallel
@@ -145,12 +147,20 @@ def main(job_config: JobConfig):
     else:
         # apply PT-D Tensor Parallel, activation checkpointing, torch.compile, Data Parallel
         models_parallelize_fns[model_name](model, world_mesh, parallel_dims, job_config)
+        print("second checkpoint")
 
         # move sharded model to CPU/GPU and initialize weights via DTensor
         init_device = "cpu" if job_config.checkpoint.create_seed_checkpoint else "cuda"
+        print("init device", init_device)
+
         model.to_empty(device=init_device)
+        print("third checkpoint")
+        
         model.init_weights()
+        print("fourth checkpoint")
+
         model.train()
+        print("fifth checkpoint")
 
         model_parts = [model]
 
@@ -341,8 +351,7 @@ def main(job_config: JobConfig):
             if memory_profiler:
                 memory_profiler.step()
 
-            # reduce timeout after first train step for faster signal
-            # (assuming lazy init and compilation are finished)
+            # reduce timeout after first train step for faster signal (assuming lazy init and compilation are finished)
             if train_state.step == 1:
                 utils.set_pg_timeouts(timeout=timedelta(seconds=job_config.comm.train_timeout_seconds), world_mesh=world_mesh)
 
