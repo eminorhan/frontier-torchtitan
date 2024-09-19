@@ -130,7 +130,6 @@ def main(job_config: JobConfig):
     def loss_fn(pred, labels):
         return torch.nn.functional.cross_entropy(pred.flatten(0, 1), labels.flatten(0, 1))
 
-    print("first checkpoint")
     # apply parallelisms and initialization
     if parallel_dims.pp_enabled:
         # apply PT-D Pipeline Parallel
@@ -147,20 +146,16 @@ def main(job_config: JobConfig):
     else:
         # apply PT-D Tensor Parallel, activation checkpointing, torch.compile, Data Parallel
         models_parallelize_fns[model_name](model, world_mesh, parallel_dims, job_config)
-        print("second checkpoint")
 
         # move sharded model to CPU/GPU and initialize weights via DTensor
         init_device = "cpu" if job_config.checkpoint.create_seed_checkpoint else "cuda"
-        print("init device", init_device)
 
+        # model.to(init_device)
         model.to_empty(device=init_device)
-        print("third checkpoint")
         
         model.init_weights()
-        print("fourth checkpoint")
 
         model.train()
-        print("fifth checkpoint")
 
         model_parts = [model]
 
@@ -262,7 +257,7 @@ def main(job_config: JobConfig):
                     pred = model(input_ids)
                     loss = loss_fn(pred, labels)
                     # pred.shape=(bs, seq_len, vocab_size)
-                    # need to free to before bwd to avoid peaking memory
+                    # need to free before bwd to avoid peaking memory
                     del pred
                     loss.backward()
 

@@ -555,9 +555,7 @@ class JobConfig:
                         # to prevent overwrite of non-specified keys
                         args_dict[k] |= v
             except (FileNotFoundError, tomllib.TOMLDecodeError) as e:
-                logger.exception(
-                    f"Error while loading the configuration file: {config_file}"
-                )
+                logger.exception(f"Error while loading the configuration file: {config_file}")
                 logger.exception(f"Error details: {str(e)}")
                 raise e
 
@@ -585,9 +583,7 @@ class JobConfig:
         assert self.model.flavor
         assert self.model.tokenizer_path
 
-    def parse_args_from_command_line(
-        self, args_list
-    ) -> Tuple[argparse.Namespace, argparse.Namespace]:
+    def parse_args_from_command_line(self, args_list) -> Tuple[argparse.Namespace, argparse.Namespace]:
         """
         Parse command line arguments and return the parsed args and the command line only args
         """
@@ -597,9 +593,7 @@ class JobConfig:
         aux_parser = argparse.ArgumentParser(argument_default=argparse.SUPPRESS)
         for arg, val in vars(args).items():
             if isinstance(val, bool):
-                aux_parser.add_argument(
-                    "--" + arg, action="store_true" if val else "store_false"
-                )
+                aux_parser.add_argument("--" + arg, action="store_true" if val else "store_false")
             elif arg == "experimental.pipeline_parallel_split_points":
                 # without this special case, type inference breaks here,
                 # since the inferred type is just 'list' and it ends up flattening

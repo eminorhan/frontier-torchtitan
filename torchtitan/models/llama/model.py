@@ -396,7 +396,6 @@ class Transformer(nn.Module):
                 a=-cutoff_factor * final_out_std,
                 b=cutoff_factor * final_out_std,
             )
-            print('initialized output')
 
     def _precompute_freqs_cis(self) -> torch.Tensor:
         return precompute_freqs_cis(
@@ -410,13 +409,11 @@ class Transformer(nn.Module):
     def forward(self, tokens: torch.Tensor):
         """
         Perform a forward pass through the Transformer model.
-
         Args:
             tokens (torch.Tensor): Input token indices.
 
         Returns:
             torch.Tensor: Output logits after applying the Transformer model.
-
         """
         # passthrough for nonexistent layers, allows easy configuration of pipeline parallel stages
         h = self.tok_embeddings(tokens) if self.tok_embeddings else tokens
@@ -432,12 +429,10 @@ class Transformer(nn.Module):
     def from_model_args(cls, model_args: ModelArgs) -> "Transformer":
         """
         Initialize a Transformer model from a ModelArgs object.
-
         Args:
             model_args (ModelArgs): Model configuration arguments.
 
         Returns:
             Transformer: Transformer model.
-
         """
         return cls(model_args)

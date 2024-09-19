@@ -20,6 +20,4 @@ The SLURM batch script in [`train.sh`](https://github.com/eminorhan/frontier-tor
 
 ### Results
 
-Overall, I achieved similar training throughput with `torchtitan` that I did with the HF `transformers` based code base [here](https://github.com/eminorhan/frontier-accelerate): with a global batch size of 16.8M tokens per update, each training update takes around a minute to complete on 64 Frontier nodes. The training script currently uses FSDP2 + DP (`dp_shard` + `dp_replicate`). I haven't observed any benefits to adding TP to the fold (3D parallelism). Presumably, 8B is too small to benefit from 3D parallelism. 
-
-I've been able to scale this basic FSDP2 + DP setup to 256 nodes on Frontier. With `dp_shard=256` and `dp_replicate=8` and a batch size per `dp_degree` of 4, this setup consumes a hefty 67M tokens per update globally (`256*8*4*8192`). The wall-clock time per update is still around 1 minute (*i.e.* roughly linear scaling), so this setup would take around ~10.3 days to go through 1T tokens.
+The training script currently uses 3D parallelism: FSDP2 + DP + TP (`dp_shard` + `dp_replicate` + `tp`). I've been able to scale this basic FSDP2 + DP + TP setup to 512 nodes (4096 GCDs) on Frontier. With `dp_shard=32`, `dp_replicate=16`, `tp=8`, and a batch size per `dp_degree` of 20, this setup consumes a hefty 84M tokens per update globally (`32*16*20*8192`). The wall-clock time per update is around ~1 minute, so this setup would take around ~8.3 days to go through 1T tokens.
