@@ -20,4 +20,6 @@ The SLURM batch script in [`train.sh`](https://github.com/eminorhan/frontier-tor
 
 ### Results
 
-The training script currently uses 3D parallelism: FSDP2 + DP + TP (`dp_shard` + `dp_replicate` + `tp`). I've been able to scale this basic FSDP2 + DP + TP setup to 512 nodes (4096 GCDs) on Frontier. With `dp_shard=32`, `dp_replicate=16`, `tp=8`, and a batch size per `dp_degree` of 20, this setup consumes a hefty 84M tokens per update globally (`32*16*20*8192`). The wall-clock time per update is around ~1 minute, so this setup would take around ~8.3 days to go through 1T tokens.
+The training script currently uses FSDP2 + DP + TP (`dp_shard` + `dp_replicate` + `tp`). I've been able to scale this basic FSDP2 + DP + TP setup to 672 nodes (5376 GCDs) on Frontier. With `dp_shard=32`, `dp_replicate=21`, `tp=8`, and a batch size per `dp_degree` of 16, this setup consumes a hefty 88M tokens per update globally (`32*21*16*8192`). The wall-clock time per update is around ~1 minute, so this setup would take around ~7.9 days to go through 1T tokens.
+
+Increasing the node count beyond 672 (by increasing `dp_replicate`) causes a failure in this setup for unknown reasons at the moment.
