@@ -54,9 +54,11 @@ class ParallelDims:
         logger.info(f"Building {len(dims)}-D device mesh with {names}, {dims}")
         names = tuple(names)
         mesh = init_device_mesh(device_type, dims, mesh_dim_names=names)
+
         # Create all the submesh here to ensure all required process groups are initialized
         if self.dp_replicate > 1 and self.dp_shard > 1:
             mesh["dp_replicate", "dp_shard"]._flatten(mesh_dim_name="dp")
+        
         return mesh
 
     @property
