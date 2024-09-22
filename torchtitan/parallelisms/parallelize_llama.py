@@ -15,9 +15,7 @@ from torch.distributed import DeviceMesh
 from torch.distributed._composable.fsdp import fully_shard, MixedPrecisionPolicy
 from torch.distributed._composable.replicate import replicate
 from torch.distributed._tensor import Replicate, Shard
-from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
-    checkpoint_wrapper as ptd_checkpoint_wrapper,
-)
+from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import checkpoint_wrapper as ptd_checkpoint_wrapper
 from torch.distributed.tensor.parallel import (
     ColwiseParallel,
     parallelize_module,
@@ -221,11 +219,7 @@ def _apply_ac_to_transformer_block(module: nn.Module, ac_config):
                     meta[mm_count_key] += 1
                 # Saves output of all compute ops, except every second mm
                 to_save = func in _save_list and not (func == torch.ops.aten.mm.default and meta[mm_count_key] % 2 == 0)
-                return (
-                    CheckpointPolicy.MUST_SAVE
-                    if to_save
-                    else CheckpointPolicy.PREFER_RECOMPUTE
-                )
+                return CheckpointPolicy.MUST_SAVE if to_save else CheckpointPolicy.PREFER_RECOMPUTE
 
             return _custom_policy
 

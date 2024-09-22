@@ -150,11 +150,8 @@ def main(job_config: JobConfig):
         # move sharded model to CPU/GPU and initialize weights via DTensor
         init_device = "cpu" if job_config.checkpoint.create_seed_checkpoint else "cuda"
 
-        # model.to(init_device)
-        model.to_empty(device=init_device)
-        
+        model.to_empty(device=init_device)        
         model.init_weights()
-
         model.train()
 
         model_parts = [model]

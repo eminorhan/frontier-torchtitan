@@ -1,9 +1,7 @@
 #!/bin/bash
 
 #SBATCH --account=stf218
-#SBATCH --nodes=672
-#SBATCH --gpus-per-node=8
-#SBATCH --cpus-per-task=8
+#SBATCH --nodes=832
 #SBATCH --time=00:30:00
 #SBATCH --job-name=train_llama
 #SBATCH --output=train_llama_%A_%a.out
@@ -17,10 +15,8 @@ export http_proxy=http://proxy.ccs.ornl.gov:3128/
 export https_proxy=http://proxy.ccs.ornl.gov:3128/
 export no_proxy='localhost,127.0.0.0/8,*.ccs.ornl.gov'
 
-# export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
-# export MASTER_PORT=3442
-
 export LOGLEVEL=INFO
+export TORCHELASTIC_ENABLE_FILE_TIMER=1
 
 # enable aws-ofi-rccl
 export LD_LIBRARY_PATH=/lustre/orion/stf218/scratch/emin/aws-ofi-rccl/lib:$LD_LIBRARY_PATH
@@ -29,12 +25,9 @@ export NCCL_ALGO=TREE         # May see performance difference with either setti
 export NCCL_CROSS_NIC=1       # On large systems, this NCCL setting has been found to improve performance
 export NCCL_IB_TIMEOUT=31
 export NCCL_SOCKET_IFNAME=hsn0
-#export NCCL_DEBUG=INFO
 
 export TORCH_NCCL_ASYNC_ERROR_HANDLING=1
 export TORCH_NCCL_BLOCKING_WAIT=1
-#export TORCH_CPP_LOG_LEVEL=INFO
-#export TORCH_DISTRIBUTED_DEBUG=INFO
 
 export HF_HOME="/lustre/orion/stf218/scratch/emin/huggingface"
 export HF_DATASETS_CACHE="/lustre/orion/stf218/scratch/emin/huggingface"
@@ -42,9 +35,11 @@ export HF_HUB_OFFLINE=1
 export GPUS_PER_NODE=8
 
 # set network
-head_node_ip=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
+export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
+export MASTER_PORT=3442
+
 CONFIG_FILE=${CONFIG_FILE:-"./train_configs/llama3_8b.toml"}
 
-srun torchrun --nnodes $SLURM_NNODES --nproc_per_node 8 --node_rank $SLURM_NODEID --rdzv_id 101 --rdzv_backend c10d --rdzv_endpoint "$head_node_ip:3442" ./train.py --job.config_file ${CONFIG_FILE}
+srun torchrun --nnodes $SLURM_NNODES --nproc_per_node 8 --max-restarts 1000 --node_rank $SLURM_NODEID --rdzv_id 101 --rdzv_backend c10d --rdzv_endpoint "$MASTER_ADDR:$MASTER_PORT" ./train.py --job.config_file ${CONFIG_FILE}
 
 echo "Done"
