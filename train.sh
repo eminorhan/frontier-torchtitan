@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --account=stf218
-#SBATCH --nodes=832
+#SBATCH --nodes=768
 #SBATCH --gpus-per-node=8
 #SBATCH --cpus-per-task=8
 #SBATCH --time=00:50:00
