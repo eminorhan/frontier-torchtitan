@@ -183,9 +183,9 @@ class JobConfig:
         )
         self.parser.add_argument(
             "--optimizer.fused",
-            default=False,
+            default=True,
             action="store_true",
-            help="Whether the fused implementation(CUDA only) is used.",
+            help="Whether the fused implementation (CUDA only) is used.",
         )
 
         # training configs

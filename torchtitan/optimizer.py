@@ -57,9 +57,7 @@ def build_optimizers(model_parts, job_config: JobConfig):
     return OptimizersContainer([_build_optimizer(model) for model in model_parts])
 
 
-def linear_warmup_linear_decay(
-    warmup_steps: int, decay_steps: int, current_step: int
-) -> float:
+def linear_warmup_linear_decay(warmup_steps: int, decay_steps: int, current_step: int) -> float:
     """Computes linear warmup followed by linear decay.
     Per LambdaLR requirement, this is accomplished by returning
     a multiplicative factor to adjust the learning rate to
@@ -84,9 +82,7 @@ def build_lr_schedulers(optimizers, job_config: JobConfig):
         """Build a linear warmup and linear decay scheduler"""
         warmup_steps = int(job_config.training.warmup_steps)
         decay_steps = float(max(1, job_config.training.steps - warmup_steps))
-        lr_lambda = functools.partial(
-            linear_warmup_linear_decay, warmup_steps, decay_steps
-        )
+        lr_lambda = functools.partial(linear_warmup_linear_decay, warmup_steps, decay_steps)
         warmup_scheduler = LambdaLR(optimizer, lr_lambda=lr_lambda)
         return warmup_scheduler
 
@@ -100,6 +96,4 @@ def build_lr_schedulers(optimizers, job_config: JobConfig):
             for schedulers in self.schedulers:
                 schedulers.step()
 
-    return SchedulersContainer(
-        [_build_lr_scheduler(optimizer) for optimizer in optimizers]
-    )
+    return SchedulersContainer([_build_lr_scheduler(optimizer) for optimizer in optimizers])

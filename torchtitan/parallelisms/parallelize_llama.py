@@ -79,6 +79,7 @@ def parallelize_llama(
                 tp_enabled=parallel_dims.tp_enabled,
                 pp_enabled=parallel_dims.pp_enabled,
             )
+            
             if parallel_dims.dp_replicate_enabled:
                 logger.info("Applied HSDP to the model")
             else:

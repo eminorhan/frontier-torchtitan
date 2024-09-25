@@ -45,8 +45,6 @@ def get_train_context(enable_loss_parallel: bool, enable_compiled_autograd: bool
 # Enable debug tracing on failure: https://pytorch.org/docs/stable/elastic/errors.html
 @record
 def main(job_config: JobConfig):
-    init_logger()
-    logger.info(f"Starting job: {job_config.job.description}")
 
     # used for colorful printing
     color = utils.Color if job_config.metrics.enable_color_printing else utils.NoColor
@@ -67,7 +65,11 @@ def main(job_config: JobConfig):
     device = torch.device(f"cuda:{int(os.environ['LOCAL_RANK'])}")
     torch.cuda.set_device(device)
     utils.init_distributed(job_config)
-    
+
+    # set up logger
+    init_logger()
+    logger.info(f"Distributed set-up complete. Starting job: {job_config.job.description}")
+
     # initialize GPU memory monitor and get peak flops for MFU calculation
     gpu_memory_monitor = build_gpu_memory_monitor()
     gpu_peak_flops = utils.get_peak_flops(gpu_memory_monitor.device_name)
@@ -251,9 +253,8 @@ def main(job_config: JobConfig):
             else:
                 # Non-PP forward / backward
                 with train_context():
-                    pred = model(input_ids)
+                    pred = model(input_ids)  # pred.shape=(bs, seq_len, vocab_size)
                     loss = loss_fn(pred, labels)
-                    # pred.shape=(bs, seq_len, vocab_size)
                     # need to free before bwd to avoid peaking memory
                     del pred
                     loss.backward()

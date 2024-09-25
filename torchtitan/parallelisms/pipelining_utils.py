@@ -24,19 +24,12 @@ def build_pipeline_schedule(job_config, stages, loss_fn):
     elif job_config.experimental.pipeline_parallel_schedule == "interleaved_1f1b":
         schedule_class = ScheduleInterleaved1F1B
         looped_schedule = True
-    elif (
-        job_config.experimental.pipeline_parallel_schedule
-        == "flexible_interleaved_1f1b"
-    ):
+    elif job_config.experimental.pipeline_parallel_schedule == "flexible_interleaved_1f1b":
         schedule_class = ScheduleFlexibleInterleaved1F1B
         looped_schedule = True
     else:
-        raise NotImplementedError(
-            f"{job_config.experimental.pipeline_parallel_schedule} is not implemented"
-        )
-    logger.info(
-        f"Using pipeline schedule {job_config.experimental.pipeline_parallel_schedule}"
-    )
+        raise NotImplementedError(f"{job_config.experimental.pipeline_parallel_schedule} is not implemented")
+    logger.info(f"Using pipeline schedule {job_config.experimental.pipeline_parallel_schedule}")
     n_microbatches = job_config.experimental.pipeline_parallel_microbatches
     if n_microbatches is None:
         n_microbatches = job_config.experimental.pipeline_parallel_degree
@@ -49,21 +42,13 @@ def build_pipeline_schedule(job_config, stages, loss_fn):
 
 
 # TODO(whc) should this be a utility inside torch.pipelining?
-def stage_ids_this_rank(
-    pp_rank: int, pp_size: int, num_stages: int, style: str = "loop"
-) -> Tuple[int]:
+def stage_ids_this_rank(pp_rank: int, pp_size: int, num_stages: int, style: str = "loop") -> Tuple[int]:
     """Compute the stage ids for the stages that will run on this pp rank for either a looped or V style schedule"""
-    assert (
-        num_stages % pp_size == 0
-    ), f"num_stages {num_stages} must be evenly divisible by pp_size {pp_size}"
+    assert num_stages % pp_size == 0, f"num_stages {num_stages} must be evenly divisible by pp_size {pp_size}"
     stages_per_rank = num_stages // pp_size
     if style == "loop":
         return tuple(pp_rank + s * pp_size for s in range(stages_per_rank))
     elif style == "v":
-        assert (
-            stages_per_rank == 2
-        ), f"v schedules assume 2 stages per rank, got {stages_per_rank}"
-        stage_v_pairs = list(
-            zip(range(pp_size), range(num_stages - 1, pp_size - 1, -1))
-        )
+        assert stages_per_rank == 2, f"v schedules assume 2 stages per rank, got {stages_per_rank}"
+        stage_v_pairs = list(zip(range(pp_size), range(num_stages - 1, pp_size - 1, -1)))
         return stage_v_pairs[pp_rank]

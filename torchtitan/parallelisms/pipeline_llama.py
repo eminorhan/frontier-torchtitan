@@ -36,9 +36,7 @@ def pipeline_llama(
     model_config: ModelArgs,
     loss_fn: Callable[..., torch.Tensor],
 ):
-    stages, models = pipeline_llama_manual_split(
-        model, pp_mesh, parallel_dims, job_config, device, model_config
-    )
+    stages, models = pipeline_llama_manual_split(model, pp_mesh, parallel_dims, job_config, device, model_config)
 
     pp_schedule = build_pipeline_schedule(job_config, stages, loss_fn)
 
@@ -48,15 +46,11 @@ def pipeline_llama(
 def _llama_trace_input(job_config: JobConfig, model_config: ModelArgs, device="meta"):
     """Get meta tensors with the right input shapes used for tracing"""
     tokens_shape = (job_config.training.batch_size, job_config.training.seq_len)
-    tokens = torch.randint(
-        model_config.vocab_size, tokens_shape, dtype=torch.int64, device=device
-    )
+    tokens = torch.randint(model_config.vocab_size, tokens_shape, dtype=torch.int64, device=device)
     return (tokens,)
 
 
-def _mixed_precision_dtype(
-    job_config: JobConfig, parallel_dims, default: torch.dtype = torch.float32
-) -> torch.dtype:
+def _mixed_precision_dtype(job_config: JobConfig, parallel_dims, default: torch.dtype = torch.float32) -> torch.dtype:
     """Get the mixed precision dtype if FSDP is enabled, otherwise return the default"""
     mp_arg = job_config.training.mixed_precision_param
     return TORCH_DTYPE_MAP[mp_arg] if parallel_dims.dp_enabled else default
@@ -153,10 +147,7 @@ def pipeline_llama_manual_split(
             is_first=stage_idx == 0,
             is_last=stage_idx == num_stages - 1,
         )
-        logger.info(
-            f"PP rank {pp_rank} is building stage_idx {stage_idx}"
-            f" with start_layer {start_layer}, stop_layer {stop_layer}: model chunk \n{model_chunk}"
-        )
+        logger.info(f"PP rank {pp_rank} is building stage_idx {stage_idx} with start_layer {start_layer}, stop_layer {stop_layer}: model chunk \n{model_chunk}")
         stages.append(stage)
         models.append(model_chunk)
     return stages, models

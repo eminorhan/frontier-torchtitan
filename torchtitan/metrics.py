@@ -34,9 +34,7 @@ class GPUMemoryMonitor:
         self.device = torch.device(device)  # device object
         self.device_name = torch.cuda.get_device_name(self.device)
         self.device_index = torch.cuda.current_device()
-        self.device_capacity = torch.cuda.get_device_properties(
-            self.device
-        ).total_memory
+        self.device_capacity = torch.cuda.get_device_properties(self.device).total_memory
         self.device_capacity_gib = self._to_gib(self.device_capacity)
 
         torch.cuda.reset_peak_memory_stats()
@@ -85,10 +83,7 @@ class GPUMemoryMonitor:
 
 def build_gpu_memory_monitor():
     gpu_memory_monitor = GPUMemoryMonitor("cuda")
-    logger.info(
-        f"GPU capacity: {gpu_memory_monitor.device_name} ({gpu_memory_monitor.device_index}) "
-        f"with {gpu_memory_monitor.device_capacity_gib:.2f}GiB memory"
-    )
+    logger.info(f"GPU capacity: {gpu_memory_monitor.device_name} ({gpu_memory_monitor.device_index}) with {gpu_memory_monitor.device_capacity_gib:.2f}GiB memory")
 
     return gpu_memory_monitor
 
@@ -126,9 +121,7 @@ def _get_metrics_rank(parallel_dims: ParallelDims) -> int:
     return metrics_log_rank
 
 
-def build_metric_logger(
-    job_config: JobConfig, parallel_dims: ParallelDims, tag: Optional[str] = None
-):
+def build_metric_logger(job_config: JobConfig, parallel_dims: ParallelDims, tag: Optional[str] = None):
     """
     parallel_dims is used to determine the rank to log metrics from if 'tb_config.rank_0_only=True'.
     In that case, `_get_metrics_rank` will be used to calculate which rank acts as 'rank 0'. This is
@@ -144,9 +137,7 @@ def build_metric_logger(
 
     enable_tb = tb_config.enable_tensorboard
     if enable_tb:
-        logger.info(
-            f"Metrics logging active. Tensorboard logs will be saved at {log_dir}"
-        )
+        logger.info(f"Metrics logging active. Tensorboard logs will be saved at {log_dir}")
         if tb_config.rank_0_only:
             enable_tb = torch.distributed.get_rank() == _get_metrics_rank(parallel_dims)
         else:
