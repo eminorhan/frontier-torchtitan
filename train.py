@@ -46,6 +46,10 @@ def get_train_context(enable_loss_parallel: bool, enable_compiled_autograd: bool
 @record
 def main(job_config: JobConfig):
 
+    # set up logger
+    init_logger()
+    logger.info(f"Starting job: {job_config.job.description}")
+
     # used for colorful printing
     color = utils.Color if job_config.metrics.enable_color_printing else utils.NoColor
 
@@ -65,10 +69,6 @@ def main(job_config: JobConfig):
     device = torch.device(f"cuda:{int(os.environ['LOCAL_RANK'])}")
     torch.cuda.set_device(device)
     utils.init_distributed(job_config)
-
-    # set up logger
-    init_logger()
-    logger.info(f"Distributed set-up complete. Starting job: {job_config.job.description}")
 
     # initialize GPU memory monitor and get peak flops for MFU calculation
     gpu_memory_monitor = build_gpu_memory_monitor()
