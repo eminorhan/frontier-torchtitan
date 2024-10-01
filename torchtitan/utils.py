@@ -93,18 +93,7 @@ def init_distributed(job_config):
         os.makedirs(dump_dir, exist_ok=True)
         _warn_overwrite_env(TRACE_FILE, f"{dump_dir}/rank_")
 
-    # torch.distributed.init_process_group(
-    #     "nccl", 
-    #     rank=int(os.environ["RANK"]), 
-    #     world_size=int(os.environ["WORLD_SIZE"]), 
-    #     device_id=torch.device("cuda", int(os.environ["LOCAL_RANK"])), 
-    #     timeout=timedelta(seconds=job_config.comm.init_timeout_seconds)
-    #     )
-
-    torch.distributed.init_process_group(
-        "nccl", 
-        timeout=timedelta(seconds=job_config.comm.init_timeout_seconds)
-        )
+    torch.distributed.init_process_group("nccl", timeout=timedelta(seconds=job_config.comm.init_timeout_seconds))
 
     # to mitigate the memory issue that collectives using
     # async_op=True hold memory longer than they should such as those in tensor parallelism

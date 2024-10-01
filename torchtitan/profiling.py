@@ -42,9 +42,7 @@ def maybe_enable_profiling(config: JobConfig, *, global_step: int = 0):
             logger.info(f"Dumping traces at step {prof.step_num}")
             begin = time.monotonic()
             prof.export_chrome_trace(f"{curr_trace_dir}/rank{rank}_trace.json")
-            logger.info(
-                f"Finished dumping traces in {time.monotonic() - begin:.2f} seconds"
-            )
+            logger.info(f"Finished dumping traces in {time.monotonic() - begin:.2f} seconds")
             # Profiling is a heavy operation which could cost very different amount of time
             # across all ranks. Insert a barrier to make sure all ranks have finished profiling
             # before moving on.
@@ -58,9 +56,7 @@ def maybe_enable_profiling(config: JobConfig, *, global_step: int = 0):
 
         warmup, active = WARMUP, 1
         wait = profile_freq - (active + warmup)
-        assert (
-            wait >= 0
-        ), "profile_freq must be greater than or equal to warmup + active"
+        assert wait >= 0, "profile_freq must be greater than or equal to warmup + active"
         with torch.profiler.profile(
             activities=[
                 torch.profiler.ProfilerActivity.CPU,
@@ -89,9 +85,7 @@ def maybe_enable_memory_snapshot(config: JobConfig, *, global_step: int = 0):
 
         class MemoryProfiler:
             def __init__(self, step_num: int, freq: int):
-                torch.cuda.memory._record_memory_history(
-                    max_entries=MEMORY_SNAPSHOT_MAX_ENTRIES
-                )
+                torch.cuda.memory._record_memory_history(max_entries=MEMORY_SNAPSHOT_MAX_ENTRIES)
                 # when resume training, we start from the last step
                 self.step_num = step_num
                 self.freq = freq
@@ -112,13 +106,9 @@ def maybe_enable_memory_snapshot(config: JobConfig, *, global_step: int = 0):
                     os.makedirs(curr_snapshot_dir, exist_ok=True)
                 logger.info(f"Dumping memory snapshot at step {curr_step}")
                 begin = time.monotonic()
-                with open(
-                    f"{curr_snapshot_dir}/rank{rank}_memory_snapshot.pickle", "wb"
-                ) as output:
+                with open(f"{curr_snapshot_dir}/rank{rank}_memory_snapshot.pickle", "wb") as output:
                     pickle.dump(torch.cuda.memory._snapshot(), output)
-                logger.info(
-                    f"Finished dumping memory snapshot in {time.monotonic() - begin:.2f} seconds"
-                )
+                logger.info(f"Finished dumping memory snapshot in {time.monotonic() - begin:.2f} seconds")
                 torch.distributed.barrier()
 
         logger.info(f"Memory profiler active. Snapshot will be saved at {snapshot_dir}")
