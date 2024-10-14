@@ -1,10 +1,10 @@
 #!/bin/bash
 
 #SBATCH --account=stf218
-#SBATCH --nodes=64
+#SBATCH --nodes=32
 #SBATCH --gpus-per-node=8
 #SBATCH --cpus-per-task=8
-#SBATCH --time=00:15:00
+#SBATCH --time=00:05:00
 #SBATCH --job-name=train_llama
 #SBATCH --output=train_llama_%A_%a.out
 #SBATCH --array=0
@@ -37,8 +37,18 @@ export GPUS_PER_NODE=8
 export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 export MASTER_PORT=3442
 
+# Calculate global rank and world size
+export WORLD_SIZE=256
+export RANK=$SLURM_PROCID
+export LOCAL_RANK=$((SLURM_PROCID % 8))
+
+# Optionally print the environment variables for debugging
+echo $RANK
+echo $LOCAL_RANK
+echo $WORLD_SIZE
+
 CONFIG_FILE=${CONFIG_FILE:-"./train_configs/llama3_8b.toml"}
 
-srun torchrun --nnodes $SLURM_NNODES --nproc_per_node 8 --max_restarts 9 --node_rank $SLURM_NODEID --rdzv_id 101 --rdzv_backend c10d --rdzv_endpoint "$MASTER_ADDR:$MASTER_PORT" ./train.py --job.config_file ${CONFIG_FILE}
+srun --nodes=$SLURM_NNODES --cpus-per-task=7 --ntasks-per-node=8 --gpus-per-task=1 --gpu-bind=closest python -u train.py --job.config_file ${CONFIG_FILE}
 
 echo "Done"

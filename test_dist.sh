@@ -4,7 +4,7 @@
 #SBATCH --nodes=1024
 #SBATCH --gpus-per-node=8
 #SBATCH --cpus-per-task=8
-#SBATCH --time=00:10:00
+#SBATCH --time=00:05:00
 #SBATCH --job-name=test_dist
 #SBATCH --output=test_dist_%A_%a.out
 #SBATCH --array=0
@@ -37,6 +37,6 @@ export GPUS_PER_NODE=8
 export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 export MASTER_PORT=3442
 
-srun -N1024 -n16 -c7 --gpus-per-task=1 --gpu-bind=closest python3 -W ignore -u ./test_dist.py --master_addr=$MASTER_ADDR --master_port=$MASTER_PORT
+srun --nodes=$SLURM_NNODES --cpus-per-task=7 --ntasks-per-node=8 --gpus-per-task=1 --gpu-bind=closest python3 -W ignore -u ./test_dist.py --master_addr=$MASTER_ADDR --master_port=$MASTER_PORT
 
 echo "Done"

@@ -66,7 +66,7 @@ def main(job_config: JobConfig):
         world_size=world_size,
         enable_loss_parallel=job_config.training.enable_loss_parallel,
     )
-    device = torch.device(f"cuda:{int(os.environ['LOCAL_RANK'])}")
+    device = torch.device(f"cuda:{int(os.environ["LOCAL_RANK"])}")
     torch.cuda.set_device(device)
     utils.init_distributed(job_config)
 
@@ -192,7 +192,7 @@ def main(job_config: JobConfig):
     metric_logger = build_metric_logger(job_config, parallel_dims)
 
     # plot losses loaded from checkpoint (if any) to TensorBoard
-    # NOTE: Loss info after the last log step before checkpoint saving will not be ploted. This can be avoided by setting checkpoint.interval to be a multiple of metrics.log_freq
+    # NOTE: Loss info after the last log step before checkpoint saving will not be plotted. This can be avoided by setting checkpoint.interval to be a multiple of metrics.log_freq
     if train_state.step > 0:
         for idx, step in enumerate(train_state.log_steps):
             metrics = {"loss_metrics/global_avg_loss": train_state.global_avg_losses[idx], "loss_metrics/global_max_loss": train_state.global_max_losses[idx]}
