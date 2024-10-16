@@ -20,6 +20,15 @@ where `hf_token` is your Hugging Face Hub token.
 
 The SLURM batch script in [`train.sh`](https://github.com/eminorhan/frontier-torchtitan/blob/master/train.sh) can be used to train a Llama-3.1-8B model with a context size of 8192 tokens. This script uses the training config file in [`train_configs/llama3_8b.toml`](https://github.com/eminorhan/frontier-torchtitan/blob/master/train_configs/llama3_8b.toml). Feel free to modify the config according to your needs.
 
+### A note on IP network interfaces
+
+For loading and saving distributed checkpoints, the code uses the `torch.distributed.checkpoint` (DPC) library. A new process group with the `gloo` backend is used for this purpose (separate from the process group used for training). In my experience, the IP network interface used by `gloo` for loading ans saving distributed checkpoints needs to be explicitly set to the same interface as the one used by `nccl` for training, *i.e.*:
+```bash
+export NCCL_SOCKET_IFNAME=hsn0
+export GLOO_SOCKET_IFNAME=hsn0
+```
+Otherwise, it becomes impossible to run on more than ~300 nodes due to communication failures.
+
 ### Results
 
 #### Head-to-head comparison between A100 *vs.* MI250X GPUs (8 nodes)

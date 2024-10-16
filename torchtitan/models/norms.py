@@ -63,11 +63,7 @@ class FusedRMSNorm(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """leverages Triton Fused RMS Norm kernel"""
-        return self.fused_rms_norm_fn(
-            x,
-            self.weight,
-            eps=self.eps,
-        )
+        return self.fused_rms_norm_fn(x, self.weight, eps=self.eps)
 
     def reset_parameters(self):
         torch.nn.init.ones_(self.weight)  # type: ignore
@@ -112,12 +108,12 @@ class RMSNorm(nn.Module):
 
 @triton.autotune(
     configs=[
-        triton.Config({}, num_warps=1),
-        triton.Config({}, num_warps=2),
-        triton.Config({}, num_warps=4),
-        triton.Config({}, num_warps=8),
+        # triton.Config({}, num_warps=1),
+        # triton.Config({}, num_warps=2),
+        # triton.Config({}, num_warps=4),
+        # triton.Config({}, num_warps=8),
         triton.Config({}, num_warps=16),
-        triton.Config({}, num_warps=32),
+        # triton.Config({}, num_warps=32),
     ],
     key=["N"],
 )
@@ -160,12 +156,12 @@ def _rms_norm_fwd_kernel(
 
 @triton.autotune(
     configs=[
-        triton.Config({}, num_warps=1),
-        triton.Config({}, num_warps=2),
-        triton.Config({}, num_warps=4),
-        triton.Config({}, num_warps=8),
+        # triton.Config({}, num_warps=1),
+        # triton.Config({}, num_warps=2),
+        # triton.Config({}, num_warps=4),
+        # triton.Config({}, num_warps=8),
         triton.Config({}, num_warps=16),
-        triton.Config({}, num_warps=32),
+        # triton.Config({}, num_warps=32),
     ],
     key=["N"],
 )
