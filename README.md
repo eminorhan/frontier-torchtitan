@@ -22,7 +22,7 @@ The SLURM batch script in [`train.sh`](https://github.com/eminorhan/frontier-tor
 
 ### A note on IP network interfaces
 
-For loading and saving distributed checkpoints, the code uses the `torch.distributed.checkpoint` (DPC) library. A new process group with the `gloo` backend is used for this purpose (separate from the process group used for training). In my experience, the IP network interface used by `gloo` for loading ans saving distributed checkpoints needs to be explicitly set to the same interface as the one used by `nccl` for training, *i.e.*:
+For loading and saving distributed checkpoints, the code uses the `torch.distributed.checkpoint` (DPC) library. A new process group with the `gloo` backend is created for this purpose (separate from the process group used by `nccl` for training). In my experience, the IP network interface to be used by both `gloo` and `nccl` needs to be explicitly set to `hsn0`, *i.e.*:
 ```bash
 export NCCL_SOCKET_IFNAME=hsn0
 export GLOO_SOCKET_IFNAME=hsn0
