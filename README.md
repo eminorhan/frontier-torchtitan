@@ -4,9 +4,14 @@ This is a copy of the [`torchtitan`](https://github.com/pytorch/torchtitan) libr
 
 ### Prerequisites
 
-* Follow the instructions [here](https://github.com/eminorhan/frontier-accelerate) to install PyTorch-ROCm, FlashAttention-2, and the `aws-ofi-rccl` plugin. 
+* Follow the instructions [here](https://github.com/eminorhan/frontier-accelerate) to install PyTorch-ROCm, FlashAttention-2, the `aws-ofi-rccl` plugin, and the Hugging Face `datasets` library.
 
-* Clone this repo and install the requirements here (`pip install -r requirements.txt`). 
+* My PyTorch-ROCm version is nightly `2.6.0.dev20241005+rocm6.2` and I think a reasonably recent nightly version is necessary to reproduce the results below.
+
+* Clone this repo and install the following:
+```bash
+pip install torchdata tomli tensorboard sentencepiece tiktoken blobfile tabulate
+``` 
 
 * Download the Llama-3.1-8B tokenizer:
 
@@ -34,9 +39,7 @@ Otherwise, it becomes impossible to run on more than ~300 nodes due to communica
 #### Head-to-head comparison between A100 *vs.* MI250X GPUs (8 nodes)
 `torchtitan` repo provides performance benchmarks for training Llama-3 8B with context size 8192 on 64 A100 GPUs (8 nodes) [here](https://github.com/pytorch/torchtitan/blob/main/docs/performance.md). With FSDP2 only parallelism, selective activation checkpointing, and a local batch size of 1, they report a `wps` of ~2900 (tokens/second) and `mfu` of ~58% (model flops utilization). 
 
-I replicated the same set-up on 8 Frontier nodes with 64 GCDs and observed a `wps` of ~645 and `mfu` of ~9% only. This is ~6x worse than the A100 results. Despite occasional [reports](https://www.databricks.com/blog/training-llms-scale-amd-mi250-gpus) I see claiming that AMD MI250X is competitive with NVIDIA A100, MI250X performs much worse than A100 on serious AI workloads in my experience. This substantial difference is likely due to the advantage in interconnect NVIDIA has over AMD with NVLink and NCCL (see also below).
-
-**Update (Oct 1):** After going through the profile traces, I noticed that the code was spending an inordinate amount of time on the `bwd_kernel_dk_dv` operation. A quick Google search brought up [this isssue](https://github.com/pytorch/pytorch/issues/135431), which seems to affect recent versions of PyTorch-ROCm. Indeed, updating to the most recent nightly (`2.6.0.dev20240930+rocm6.2`) yielded a ~2-2.5x improvement in the training throughput. In the above setting (8 nodes), I'm now observing a `wps` of ~1250 and `mfu` of ~23%. Although this is a significant (and welcome) improvement over the previous version, there's still a ~2.5x gap with the A100 results. I'm currently investigating if I can reduce this gap even further.
+I replicated the same set-up on 8 Frontier nodes with 64 GCDs and observed a `wps` of ~1260 and `mfu` of ~23% only. This is ~2.3-2.5x worse than the A100 results. Despite occasional [reports](https://www.databricks.com/blog/training-llms-scale-amd-mi250-gpus) I see claiming that AMD MI250X is competitive with NVIDIA A100, MI250X performs much worse than A100 on serious AI workloads in my experience. This substantial difference is likely due to the advantage in interconnect NVIDIA has over AMD with NVLink and NCCL (see also below).
 
 #### Scaling up on Frontier
-I've been able to scale Llama-3 8B training with FSDP2 + DP + TP (`dp_shard` + `dp_replicate` + `tp`) up to 832 nodes (6656 GCDs) on Frontier. With `dp_shard=32`, `dp_replicate=26`, `tp=8`, and a batch size per `dp_degree` of 21, this setup consumes a hefty 143M tokens per update globally (`32*26*21*8192`). The wall-clock time per update is around ~1 minute, so this setup would take around ~4.9 days to go through 1T tokens. However, this setup doesn't work reliably unfortunately. Out of 10 attempts, I would be lucky if 1-2 worked successfully. Large-scale runs on a large number of nodes are regrettably, disappointingly finicky on Frontier. Increasing the node count beyond 832 (by increasing `dp_replicate`) almost always fails in my experience.
+I've been able to scale Llama-3 8B training with FSDP2 + DP + TP (`dp_shard` + `dp_replicate` + `tp`) up to 640 nodes (5120 GCDs) on Frontier. With `dp_shard=32`, `dp_replicate=20`, `tp=8`, and a batch size per `dp_degree` of 21, this setup consumes a hefty 110M tokens per update globally (`32*20*21*8192`). The wall-clock time per update is around ~0.6 minute, so this setup would take around ~3.8 days to go through 1T tokens. However, this setup doesn't work reliably unfortunately. Out of 10 attempts, I would be lucky if 4-5 worked successfully. Large-scale runs on a large number of nodes are regrettably, disappointingly finicky on Frontier. Increasing the node count beyond 640 (by increasing `dp_replicate`) almost always fails in my experience.
