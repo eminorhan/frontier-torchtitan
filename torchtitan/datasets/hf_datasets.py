@@ -89,7 +89,7 @@ class HuggingFaceDataset(IterableDataset, Stateful):
         elif dataset_name == "wikipedia":
             ds = load_dataset(dataset_path, "20231101.en", trust_remote_code=True)
         elif dataset_name == "c4":
-            # c4 is huge, and requires both streaming and language selection (we default to en)
+            # c4 is huge, and requires both streaming and subset selection
             ds = load_dataset(dataset_path, name="realnewslike", split="train", trust_remote_code=True)
         else:
             ds = load_dataset(dataset_path, split="train")

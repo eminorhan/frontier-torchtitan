@@ -21,11 +21,7 @@ from torchtitan.logging import init_logger, logger
 from torchtitan.metrics import build_gpu_memory_monitor, build_metric_logger
 from torchtitan.models import model_name_to_cls, model_name_to_tokenizer, models_config
 from torchtitan.optimizer import build_lr_schedulers, build_optimizers
-from torchtitan.parallelisms import (
-    models_parallelize_fns,
-    models_pipelining_fns,
-    ParallelDims,
-)
+from torchtitan.parallelisms import models_parallelize_fns, models_pipelining_fns, ParallelDims
 from torchtitan.profiling import maybe_enable_memory_snapshot, maybe_enable_profiling
 
 
