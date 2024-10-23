@@ -4,6 +4,7 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+import os
 import pickle
 from typing import Any, Dict, List, Optional
 
@@ -95,8 +96,8 @@ class HuggingFaceDataset(IterableDataset, Stateful):
             ds = load_dataset(dataset_path, split="train")
 
         # TODO: support shuffling
-        self.dataset_name = dataset_name
         self._data = split_dataset_by_node(ds, rank, world_size)
+        self.dataset_name = dataset_name
         self._tokenizer = tokenizer
         self.seq_len = seq_len
         self.infinite = infinite
@@ -111,6 +112,7 @@ class HuggingFaceDataset(IterableDataset, Stateful):
         while True:
             for sample in self._get_data_iter():
                 sample_text = sample["text"]
+                # logger.info(f"[rank {int(os.environ["RANK"])}] {sample_text}")
                 sample_tokens = self._tokenizer.encode(sample_text, bos=True, eos=True)
                 self._all_tokens.extend(sample_tokens)
                 self._sample_idx += 1

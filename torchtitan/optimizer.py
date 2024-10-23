@@ -13,7 +13,8 @@ from torchtitan.config_manager import JobConfig
 
 # consider split between PP and non-PP
 def build_optimizers(model_parts, job_config: JobConfig):
-    """Wrap one optimizer per model part in an OptimizersContainer which provides a single
+    """
+    Wrap one optimizer per model part in an OptimizersContainer which provides a single
     step() and zero_grad() method for all the child optimizers.
     """
 
@@ -58,17 +59,14 @@ def build_optimizers(model_parts, job_config: JobConfig):
 
 
 def linear_warmup_linear_decay(warmup_steps: int, decay_steps: int, current_step: int) -> float:
-    """Computes linear warmup followed by linear decay.
-    Per LambdaLR requirement, this is accomplished by returning
-    a multiplicative factor to adjust the learning rate to
-    create the desired schedule.
+    """
+    Computes linear warmup followed by linear decay. Per LambdaLR requirement, this is accomplished by returning
+    a multiplicative factor to adjust the learning rate to create the desired schedule.
     """
     if current_step < warmup_steps:
-        # linear warmup
-        # 0-indexed step, hence + 1 adjustments
+        # linear warmup (0-indexed step, hence + 1 adjustments)
         current_step += 1
         curr_adjustment = float(current_step / (warmup_steps + 1))
-
     else:
         # linear decay
         normalized_step = decay_steps - (current_step - warmup_steps)
