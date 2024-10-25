@@ -1,10 +1,10 @@
 #!/bin/bash
 
 #SBATCH --account=stf218
-#SBATCH --nodes=608
+#SBATCH --nodes=576
 #SBATCH --gpus-per-node=8
 #SBATCH --cpus-per-task=8
-#SBATCH --time=00:39:00
+#SBATCH --time=00:59:00
 #SBATCH --job-name=train_llama_8B
 #SBATCH --output=train_llama_8B_%A_%a.out
 #SBATCH --array=0
@@ -30,6 +30,7 @@ export TORCH_NCCL_BLOCKING_WAIT=1
 export TORCH_NCCL_ASYNC_ERROR_HANDLING=1
 export TORCHELASTIC_ENABLE_FILE_TIMER=1
 export OMP_NUM_THREADS=1
+export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
 export HF_HOME="/lustre/orion/stf218/scratch/emin/huggingface"
 export HF_DATASETS_CACHE="/lustre/orion/stf218/scratch/emin/huggingface"
 export HF_HUB_OFFLINE=1

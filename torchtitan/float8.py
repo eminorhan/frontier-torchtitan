@@ -36,22 +36,15 @@ class Float8Handler:
         if not float8_config.enable_float8_linear:
             return
         if not _is_sm89_or_later():
-            logger.warning(
-                "Failed to swap to Float8Linear because float8 is only supported on SM89 or later",
-            )
+            logger.warning("Failed to swap to Float8Linear because float8 is only supported on SM89 or later")
             return
         try:
             from torchao.float8 import CastConfig, Float8LinearConfig, ScalingType
         except ImportError as e:
-            raise ImportError(
-                "torchao is not installed. Please install it to use float8 linear layers."
-            ) from e
+            raise ImportError("torchao is not installed. Please install it to use float8 linear layers.") from e
 
         # Mutates the model inplace replacing instances of torch.nn.Linear with Float8Linear
-        enable_fsdp_float8_all_gather = (
-            parallel_dims.dp_shard_enabled
-            and float8_config.enable_fsdp_float8_all_gather
-        )
+        enable_fsdp_float8_all_gather = (parallel_dims.dp_shard_enabled and float8_config.enable_fsdp_float8_all_gather)
         scaling_type_input = ScalingType(float8_config.scaling_type_input)
         scaling_type_weight = ScalingType(float8_config.scaling_type_weight)
         scaling_type_grad_output = ScalingType(float8_config.scaling_type_grad_output)
@@ -66,10 +59,7 @@ class Float8Handler:
         self.enabled = True
 
         # for precompute_float8_dynamic_scale_for_fsdp
-        self.precompute_scale = (
-            enable_fsdp_float8_all_gather
-            and float8_config.precompute_float8_dynamic_scale_for_fsdp
-        )
+        self.precompute_scale = (enable_fsdp_float8_all_gather and float8_config.precompute_float8_dynamic_scale_for_fsdp)
 
         # for sync_float8_amax_and_scale_history
         self.delayed_scaling = (
@@ -99,14 +89,9 @@ class Float8Handler:
             config=self.config,
             module_filter_fn=lambda mod, fqn: fqn != "output",
         )
-        logger.info(
-            "Swapped to Float8Linear layers with enable_fsdp_float8_all_gather="
-            f"{self.config.enable_fsdp_float8_all_gather}"
-        )
+        logger.info(f"Swapped to Float8Linear layers with enable_fsdp_float8_all_gather={self.config.enable_fsdp_float8_all_gather}")
 
-    def precompute_float8_dynamic_scale_for_fsdp(
-        self, model: Union[nn.Module, List[nn.Module]]
-    ):
+    def precompute_float8_dynamic_scale_for_fsdp(self, model: Union[nn.Module, List[nn.Module]]):
         if not self.enabled:
             return
 
@@ -119,9 +104,7 @@ class Float8Handler:
         for m in models:
             precompute_float8_dynamic_scale_for_fsdp(m)
 
-    def sync_float8_amax_and_scale_history(
-        self, model: Union[nn.Module, List[nn.Module]]
-    ):
+    def sync_float8_amax_and_scale_history(self, model: Union[nn.Module, List[nn.Module]]):
         if not self.enabled:
             return
 
@@ -135,13 +118,9 @@ class Float8Handler:
 
         if self._sync_float8_amax_and_scale_history is None:
             if self.compile:
-                self._sync_float8_amax_and_scale_history = torch.compile(
-                    sync_float8_amax_and_scale_history
-                )
+                self._sync_float8_amax_and_scale_history = torch.compile(sync_float8_amax_and_scale_history)
             else:
-                self._sync_float8_amax_and_scale_history = (
-                    sync_float8_amax_and_scale_history
-                )
+                self._sync_float8_amax_and_scale_history = sync_float8_amax_and_scale_history
 
         models = [model] if isinstance(model, nn.Module) else model
         for m in models:

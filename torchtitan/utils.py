@@ -47,7 +47,7 @@ def set_pg_timeouts(timeout, world_mesh):
     # Ensure that all the ranks have reached the point of setting the new timeout-
     # otherwise, some ranks may issue collectives with the new/shorter timeout and
     # those may time out, before other ranks have finished with initialization done under the old/slow timeout.
-    torch.distributed.barrier()
+    torch.distributed.barrier(device_ids=[torch.cuda.current_device()])
     torch.cuda.synchronize()
 
     groups = [world_mesh.get_group(mesh_dim) for mesh_dim in range(world_mesh.ndim)]
@@ -93,11 +93,11 @@ def init_distributed(job_config):
         os.makedirs(dump_dir, exist_ok=True)
         _warn_overwrite_env(TRACE_FILE, f"{dump_dir}/rank_")
 
-    torch.distributed.init_process_group("nccl", timeout=timedelta(seconds=job_config.comm.init_timeout_seconds))
-
     # to mitigate the memory issue that collectives using
     # async_op=True hold memory longer than they should such as those in tensor parallelism
     os.environ["TORCH_NCCL_AVOID_RECORD_STREAMS"] = "1"
+
+    torch.distributed.init_process_group("nccl", timeout=timedelta(seconds=job_config.comm.init_timeout_seconds))
 
 
 def get_num_params(model: torch.nn.Module, exclude_embedding: bool = False) -> int:

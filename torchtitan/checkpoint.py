@@ -279,7 +279,7 @@ class CheckpointManager:
         else:
             logger.info(f"Saving a full checkpoint at last step, step {curr_step}.")
 
-        dcp.save(self.states, checkpoint_id=self._create_checkpoint_id(curr_step))
+        dcp.save(self.states, checkpoint_id=self._create_checkpoint_id(curr_step), process_group=self.pg)
         self.reset()
 
     def _should_save(self, curr_step: int, force: bool = False) -> bool:
@@ -363,7 +363,7 @@ class CheckpointManager:
         elif self.async_mode == AsyncMode.ASYNC:
             self.async_future = dcp.async_save(self.states, checkpoint_id=checkpoint_id, process_group=self.pg)
         else:
-            dcp.save(self.states, checkpoint_id=checkpoint_id)
+            dcp.save(self.states, checkpoint_id=checkpoint_id, process_group=self.pg)
         self.reset()
         self._purge_stale_checkpoints()
 
@@ -407,7 +407,7 @@ class CheckpointManager:
         original_stateful_states = {k: v for k, v in states.items() if isinstance(v, Stateful)}
         logger.info(f"Loading the checkpoint at step {step}.")
         begin = time.monotonic()
-        dcp.load(states, checkpoint_id=self._create_checkpoint_id(step))
+        dcp.load(states, checkpoint_id=self._create_checkpoint_id(step), process_group=self.pg)
         logger.info(f"Finished loading the checkpoint in {time.monotonic() - begin:.2f} seconds.")
         # bugfix from above: restore the original stateful objects,
         # whose states were already updated in-place by dcp.load()

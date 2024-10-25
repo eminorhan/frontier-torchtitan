@@ -5,6 +5,7 @@
 build
 outputs
 dist/*
+core
 
 # data
 data
