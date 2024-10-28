@@ -4,13 +4,15 @@ This is a copy of the [`torchtitan`](https://github.com/pytorch/torchtitan) libr
 
 ### Prerequisites
 
-* Follow the instructions [here](https://github.com/eminorhan/frontier-accelerate) to install PyTorch-ROCm, FlashAttention-2, the `aws-ofi-rccl` plugin, and the Hugging Face `datasets` library.
-
-* My PyTorch-ROCm version is nightly `2.6.0.dev20241005+rocm6.2` and I think a reasonably recent nightly version is necessary to reproduce the results below.
-
-* Clone this repo and install the following:
+* Install PyTorch nightly with ROCm 6.2:
 ```bash
-pip install torchdata tomli tensorboard sentencepiece tiktoken blobfile tabulate
+pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/rocm6.2
+```
+My PyTorch-ROCm version is nightly `2.6.0.dev20241005+rocm6.2` and I think a reasonably recent nightly version is necessary to reproduce the results below.
+
+* Clone this repo and install the following packages:
+```bash
+pip install datasets torchdata tomli tensorboard sentencepiece tiktoken blobfile tabulate ninja
 ``` 
 
 * Download the Llama-3.1-8B tokenizer:
@@ -20,6 +22,17 @@ python torchtitan/datasets/download_tokenizer.py --repo_id meta-llama/Meta-Llama
 ```
 
 where `hf_token` is your Hugging Face Hub token.
+
+* Unlike for CUDA, you will need to install FlashAttention-2 for ROCm separately. [This page](https://rocm.docs.amd.com/en/latest/how-to/llm-fine-tuning-optimization/model-acceleration-libraries.html) provides the instructions for that. Basically, to intall from source:
+
+```bash
+git clone https://github.com/ROCm/flash-attention.git
+cd flash-attention/
+GPU_ARCHS=gfx90a python setup.py install  # MI200 series
+```
+Here, `gfx90a` is the correct GPU architecture choice for MI250X. In the last step, make sure to build with `ninja` (`pip install ninja` if it's not already installed), otherwise it might take forever. Also, make sure to set your ROCm home directory correctly for the installation to proceed: *e.g.* `export ROCM_HOME=/opt/rocm-6.2.0` for ROCm 6.2.
+
+* Install the `aws-ofi-rccl` plugin, which enables `rccl` (AMD ROCm's version of `nccl`) to use `libfabric` for a more performant interconnect. I provide a shell script here ([`aws_ofi_rccl.sh`](https://github.com/eminorhan/frontier-torchtitan/blob/master/aws_ofi_rccl.sh)) to install this plugin. Simply run this script (*e.g.* `sh aws_ofi_rccl.sh`) to install the plugin (the script assumes that your ROCm version is 6.2.0; if you're using a different version, change it accordingly).
 
 ### Training
 
