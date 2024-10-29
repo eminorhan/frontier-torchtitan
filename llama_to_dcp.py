@@ -110,11 +110,11 @@ def convert_llama_weights(input_dir, output_dir):
         for i in range(len(shards)):
             del shards[i]["output.weight"]
 
-        state_dict["freqs_cis"] = precompute_freqs_cis(
-            ModelArgs8B.dim // ModelArgs8B.n_heads, 
-            ModelArgs8B.max_seq_len * 2, 
-            ModelArgs8B.rope_theta
-            )
+    state_dict["freqs_cis"] = precompute_freqs_cis(
+        ModelArgs8B.dim // ModelArgs8B.n_heads, 
+        ModelArgs8B.max_seq_len * 2, 
+        ModelArgs8B.rope_theta
+        )
 
     logger.info(f"Writing to DCP at '{output_dir}'")
     output_dir.mkdir(parents=True, exist_ok=True)
