@@ -1,12 +1,12 @@
 #!/bin/bash
 
 #SBATCH --account=stf218
-#SBATCH --nodes=32
-#SBATCH --gpus-per-node=8
+#SBATCH --nodes=1
+#SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-task=8
-#SBATCH --time=00:05:00
-#SBATCH --job-name=train_llama_3B
-#SBATCH --output=train_llama_3B_%A_%a.out
+#SBATCH --time=00:09:00
+#SBATCH --job-name=eval_ckpt
+#SBATCH --output=eval_ckpt_%A_%a.out
 #SBATCH --array=0
 #SBATCH --qos=debug
 
@@ -30,17 +30,20 @@ export TORCH_NCCL_BLOCKING_WAIT=1
 export TORCH_NCCL_ASYNC_ERROR_HANDLING=1
 export TORCHELASTIC_ENABLE_FILE_TIMER=1
 export OMP_NUM_THREADS=1
+export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
 export HF_HOME="/lustre/orion/stf218/scratch/emin/huggingface"
 export HF_DATASETS_CACHE="/lustre/orion/stf218/scratch/emin/huggingface"
-export HF_HUB_OFFLINE=1
+export HF_HUB_OFFLINE=0
 export GPUS_PER_NODE=8
 
 # set network
 export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 export MASTER_PORT=3442
 
-CONFIG_FILE=${CONFIG_FILE:-"./train_configs/llama3_3b.toml"}
+# CONFIG_FILE=${CONFIG_FILE:-"./train_configs/llama3_8b.toml"}
 
-srun torchrun --nnodes $SLURM_NNODES --nproc_per_node 8 --max_restarts 9 --node_rank $SLURM_NODEID --rdzv_id 101 --rdzv_backend c10d --rdzv_endpoint "$MASTER_ADDR:$MASTER_PORT" ./train.py --job.config_file ${CONFIG_FILE}
+# srun torchrun --nnodes $SLURM_NNODES --nproc_per_node 8 --max_restarts 9 --node_rank $SLURM_NODEID --rdzv_id 101 --rdzv_backend c10d --rdzv_endpoint "$MASTER_ADDR:$MASTER_PORT" ./train.py --job.config_file ${CONFIG_FILE}
+
+srun tune run eleuther_eval --config eval_config.yaml
 
 echo "Done"
