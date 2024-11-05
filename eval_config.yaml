@@ -26,10 +26,19 @@ dtype: bf16
 seed: 1234 # It is not recommended to change this seed, b/c it matches EleutherAI's default seed
 
 # EleutherAI specific eval args
-tasks: ["truthfulqa_mc2"]
+# tasks: ["mmlu_flan_cot_zeroshot"]
+# tasks: ["mmlu_pro"]   
+# tasks: ["ai2_arc"]   
+# tasks: ["gsm8k_cot_llama"]   
+# tasks: ["agieval_en"] # must divide into subtasks  
+# tasks: ["drop"]   
+# tasks: ["bbh"]   
+# tasks: ["winogrande"]   
+tasks: ["hellaswag"]   
+
 limit: null
 max_seq_length: 4096
-batch_size: 1
+batch_size: 4
 enable_kv_cache: True
 
 # Quantization specific args

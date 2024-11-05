@@ -152,8 +152,11 @@ def get_peak_flops(device_name: str) -> int:
             return 756e12
         else:  # for H100 SXM and other variants
             return 989e12
-    else:  # for other GPU types, assume A100
-        return 312e12
+    elif "MI250X" in device_name:
+        # data from https://www.amd.com/en/products/accelerators/instinct/mi200/mi250x.html
+        return 191.5e12  # per GCD
+    else:  # for other GPU types, assume MI250X
+        return 191.5e12
 
 
 @dataclass(frozen=True)
