@@ -14,29 +14,6 @@ import torch.distributed.checkpoint as DCP
 from torchtitan.logging import init_logger, logger
 
 
-def precompute_freqs_cis(dim: int, end: int, theta: float = 10000.0) -> torch.Tensor:
-    """
-    Precompute the frequency tensor for complex exponentials (cis) with given dimensions.
-
-    This function calculates a frequency tensor with complex exponentials using the given dimension 'dim'
-    and the end index 'end'. The 'theta' parameter scales the frequencies.
-    The returned tensor contains complex values in complex64 data type.
-
-    Args:
-        dim (int): Dimension of the frequency tensor.
-        end (int): End index for precomputing frequencies.
-        theta (float, optional): Scaling factor for frequency computation. Defaults to 10000.0.
-
-    Returns:
-        torch.Tensor: Precomputed frequency tensor with complex exponentials.
-    """
-    freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)[: (dim // 2)].float() / dim))
-    t = torch.arange(end, device=freqs.device)
-    freqs = torch.outer(t, freqs).float()
-    freqs_cis = torch.polar(torch.ones_like(freqs), freqs)  # complex64
-    return freqs_cis
-
-
 @torch.inference_mode()
 def convert_llama_weights(input_dir, output_dir):
     
@@ -102,7 +79,6 @@ def convert_llama_weights(input_dir, output_dir):
         state_dict["output.weight"] = torch.cat([shards[i]["output.weight"] for i in range(len(shards))], dim=0)
         for i in range(len(shards)):
             del shards[i]["output.weight"]
-
 
     logger.info(f"Writing to DCP at '{output_dir}'")
     output_dir.mkdir(parents=True, exist_ok=True)
