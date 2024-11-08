@@ -4,10 +4,10 @@
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-task=8
-#SBATCH --time=2:00:00
-#SBATCH --job-name=eval_ckpt
-#SBATCH --output=eval_ckpt_%A_%a.out
-#SBATCH --array=0-8
+#SBATCH --time=00:59:00
+#SBATCH --job-name=test_lm_eval
+#SBATCH --output=test_lm_eval_%A_%a.out
+#SBATCH --array=0
 #SBATCH --qos=debug
 
 # set proxy server to enable communication with outside
@@ -23,25 +23,6 @@ export HF_HOME="/lustre/orion/stf218/scratch/emin/huggingface"
 export HF_DATASETS_CACHE="/lustre/orion/stf218/scratch/emin/huggingface"
 export HF_HUB_OFFLINE=1
 
-# irectory where eval config files are stored
-CONFIG_DIR="/lustre/orion/stf218/scratch/emin/torchtitan/eval_configs"
-
-# list of eval configs to run
-CONFIG_FILES=(
-  "config_mmlu.yaml"
-  "config_mmlu_pro.yaml"
-  "config_arc.yaml"
-  "config_gsm8k.yaml"
-  "config_agieval.yaml"
-  "config_drop.yaml"
-  "config_bbh.yaml"
-  "config_winogrande.yaml"
-  "config_hellaswag.yaml"
-)
-
-# suse SLURM_ARRAY_TASK_ID to select the config file based on the index
-CONFIG_FILE="${CONFIG_DIR}/${CONFIG_FILES[$SLURM_ARRAY_TASK_ID]}"
-
-srun tune run eleuther_eval --config $CONFIG_FILE
+srun lm_eval --model hf --model_args pretrained=meta-llama/Llama-3.1-8B --tasks mmlu_flan_cot_zeroshot --device cuda --batch_size 32
 
 echo "Done"

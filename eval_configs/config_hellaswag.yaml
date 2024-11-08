@@ -1,0 +1,37 @@
+# Config for EleutherEvalRecipe in eleuther_eval.py
+#
+# To launch, run the following command from root torchtune directory:
+#    tune run eleuther_eval --config eleuther_evaluation tasks=["truthfulqa_mc2","hellaswag"]
+
+# Model Arguments
+model:
+  _component_: torchtune.models.llama3_1.llama3_1_8b
+
+checkpointer:
+  _component_: torchtune.training.FullModelMetaCheckpointer
+  checkpoint_dir: /lustre/orion/stf218/scratch/emin/torchtitan/outputs/pt
+  checkpoint_files: [checkpoint.pth]
+  output_dir: /lustre/orion/stf218/scratch/emin/torchtitan/eval
+  model_type: LLAMA3
+
+# Tokenizer
+tokenizer:
+  _component_: torchtune.models.llama3.llama3_tokenizer
+  path: /lustre/orion/stf218/scratch/emin/torchtitan/torchtitan/datasets/tokenizer/original/tokenizer.model
+  max_seq_len: null
+
+# Environment
+device: cuda
+dtype: bf16
+seed: 1234 # It is not recommended to change this seed, b/c it matches EleutherAI's default seed
+
+# EleutherAI specific eval args
+tasks: ["hellaswag"]
+
+limit: null
+max_seq_length: 4096
+batch_size: 12
+enable_kv_cache: True
+
+# Quantization specific args
+quantizer: null
