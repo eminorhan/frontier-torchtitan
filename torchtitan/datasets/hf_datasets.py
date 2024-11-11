@@ -17,15 +17,13 @@ from torchdata.stateful_dataloader import StatefulDataLoader
 from torchtitan.datasets.tokenizer import Tokenizer
 from torchtitan.logging import logger
 
-from datasets import Dataset, load_dataset
+from datasets import Dataset, load_dataset, interleave_datasets
 from datasets.distributed import split_dataset_by_node
 
 # map from dataset name to a local directory, or a dataset repository on the HF hub
 _supported_datasets = {
-    "c4_test": "test/assets/c4_test",
     "c4": "allenai/c4",
-    "wikipedia": "wikimedia/wikipedia",
-    "wikitext": "Salesforce/wikitext"
+    "full": "local cache",
 }
 
 
@@ -85,13 +83,17 @@ class HuggingFaceDataset(IterableDataset, Stateful):
             dataset_path = _supported_datasets[dataset_name]
         logger.info(f"Preparing {dataset_name} dataset from {dataset_path}")
 
-        if dataset_name == "wikitext":
-            ds = load_dataset(dataset_path, "wikitext-103-v1", trust_remote_code=True)
-        elif dataset_name == "wikipedia":
-            ds = load_dataset(dataset_path, "20231101.en", trust_remote_code=True)
-        elif dataset_name == "c4":
+        if dataset_name == "c4":
             # c4 is huge, and requires both streaming and subset selection
             ds = load_dataset(dataset_path, name="realnewslike", split="train", trust_remote_code=True)
+        elif dataset_name == "full":
+            ds_dclm = load_dataset("Zyphra/Zyda-2", name="dclm_crossdeduped", split="train", trust_remote_code=True)
+            ds_fwe = load_dataset("Zyphra/Zyda-2", name="fwe3", split="train", trust_remote_code=True)
+            ds_dolma = load_dataset("Zyphra/Zyda-2", name="dolma-cc_crossdeduped-filtered", split="train", trust_remote_code=True)
+            ds_zyda = load_dataset("Zyphra/Zyda-2", name="zyda_crossdeduped-filtered", split="train", trust_remote_code=True)
+            ds_stack = load_dataset("bigcode/the-stack-dedup", split="train", trust_remote_code=True)
+            ds_openwebmath = load_dataset("open-web-math/open-web-math", split="train", trust_remote_code=True)
+            ds = interleave_datasets([ds_dclm, ds_fwe, ds_dolma, ds_zyda, ds_stack, ds_openwebmath], probabilities=[0.4, 0.4, 0.03, 0.02, 0.1, 0.05], seed=1, stopping_strategy="all_exhausted")
         else:
             ds = load_dataset(dataset_path, split="train")
 
@@ -111,7 +113,8 @@ class HuggingFaceDataset(IterableDataset, Stateful):
 
         while True:
             for sample in self._get_data_iter():
-                sample_text = sample["text"]
+                column_name = "text" if "text" in sample.keys() else "content"
+                sample_text = sample[column_name]
                 # logger.info(f"[rank {int(os.environ["RANK"])}] {sample_text}")
                 sample_tokens = self._tokenizer.encode(sample_text, bos=True, eos=True)
                 self._all_tokens.extend(sample_tokens)
