@@ -61,6 +61,18 @@ python dcp_to_llama.py --input_dir INPUT_DIR --ouput_dir OUTPUT_DIR
 ```
 where `INPUT_DIR` now holds the `DCP` checkpoint and the `.pth` checkpoint will be saved in `OUTPUT_DIR`. You will need to do this conversion to evaluate the intermediate checkpoints. Optionally, you can also push the intermediate checkpoints (converted into `.pth` format) by passing the argument `--push_to_hub`.
 
+### Pretraining data
+
+Currently, the planned pretraining data consist of a combination of the following datasets:
+
+* [Zyda-2](https://huggingface.co/datasets/Zyphra/Zyda-2), which is itself a cross-deduplicated and filtered combination of DCLM-baseline, FineWeb-Edu, Dolma, Zyda.
+
+* `python-edu` subset of the [`smollm-corpus`](https://huggingface.co/datasets/HuggingFaceTB/smollm-corpus).
+
+* [`OpenWebMath`](https://huggingface.co/datasets/open-web-math/open-web-math)
+
+The subdirectory [`download_scripts`](https://github.com/eminorhan/frontier-torchtitan/tree/master/download_scripts) contains basic Python scripts to download these datasets.
+
 ### Results
 
 #### Head-to-head comparison between A100 *vs.* MI250X GPUs (8 nodes)
