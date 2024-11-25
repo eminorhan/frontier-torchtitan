@@ -66,7 +66,7 @@ For the conversion in the other direction (`DCP --> torch.save`), you can use th
 ```bash
 python dcp_to_llama.py --input_dir INPUT_DIR --ouput_dir OUTPUT_DIR
 ```
-where `INPUT_DIR` now holds the `DCP` checkpoint and the `.pth` checkpoint will be saved in `OUTPUT_DIR`. You will need to do this conversion to evaluate the intermediate checkpoints. Optionally, you can also push the intermediate checkpoints (converted into `.pth` format) by passing the argument `--push_to_hub`.
+where `INPUT_DIR` now holds the `DCP` checkpoint and the `.pth` checkpoint will be saved in `OUTPUT_DIR`. You will need to do this conversion to evaluate the intermediate checkpoints. Optionally, you can also push the intermediate checkpoints (converted into `.pth` format) to huggingface by passing the argument `--push_to_hub`.
 
 ### Results
 #### Head-to-head comparison between A100 *vs.* MI250X GPUs (8 nodes)
