@@ -17,7 +17,7 @@ from torchdata.stateful_dataloader import StatefulDataLoader
 from torchtitan.datasets.tokenizer import Tokenizer
 from torchtitan.logging import logger
 
-from datasets import Dataset, load_dataset, interleave_datasets
+from datasets import Dataset, load_dataset, load_from_disk, interleave_datasets
 from datasets.distributed import split_dataset_by_node
 
 # map from dataset name to a local directory, or a dataset repository on the HF hub
@@ -85,15 +85,20 @@ class HuggingFaceDataset(IterableDataset, Stateful):
 
         if dataset_name == "c4":
             # c4 is huge, and requires both streaming and subset selection
-            ds = load_dataset(dataset_path, name="realnewslike", split="train", trust_remote_code=True)
+            ds = load_dataset(dataset_path, name="realnewslike", split="train", streaming=True)
         elif dataset_name == "full":
-            ds_dclm = load_dataset("Zyphra/Zyda-2", name="dclm_crossdeduped", split="train", trust_remote_code=True)
-            ds_fwe = load_dataset("Zyphra/Zyda-2", name="fwe3", split="train", trust_remote_code=True)
-            ds_dolma = load_dataset("Zyphra/Zyda-2", name="dolma-cc_crossdeduped-filtered", split="train", trust_remote_code=True)
-            ds_zyda = load_dataset("Zyphra/Zyda-2", name="zyda_crossdeduped-filtered", split="train", trust_remote_code=True)
-            ds_stack = load_dataset("bigcode/the-stack-dedup", split="train", trust_remote_code=True)
-            ds_openwebmath = load_dataset("open-web-math/open-web-math", split="train", trust_remote_code=True)
-            ds = interleave_datasets([ds_dclm, ds_fwe, ds_dolma, ds_zyda, ds_stack, ds_openwebmath], probabilities=[0.4, 0.4, 0.03, 0.02, 0.1, 0.05], seed=1, stopping_strategy="all_exhausted")
+            ds_dclm = load_dataset("Zyphra/Zyda-2", name="dclm_crossdeduped", split="train", streaming=True)
+            ds_fwe = load_dataset("Zyphra/Zyda-2", name="fwe3", split="train", streaming=True).remove_columns("language_score")  # remove `language_score` column due to dtype mismatch with dclm
+            ds_dolma = load_dataset("Zyphra/Zyda-2", name="dolma-cc_crossdeduped-filtered", split="train", streaming=True)
+            ds_zyda = load_dataset("Zyphra/Zyda-2", name="zyda_crossdeduped-filtered", split="train", streaming=True)
+            ds_pyedu = load_from_disk("/lustre/orion/stf218/scratch/emin/huggingface/smollm-corpus-python-edu").to_iterable_dataset()
+            ds_openwebmath = load_dataset("open-web-math/open-web-math", split="train", streaming=True)
+            ds = interleave_datasets(
+                [ds_dclm, ds_fwe, ds_dolma, ds_zyda, ds_pyedu, ds_openwebmath],
+                probabilities=[0.47, 0.47, 0.034, 0.024, 0.001, 0.001], 
+                seed=1, 
+                stopping_strategy="all_exhausted"
+                )
         else:
             ds = load_dataset(dataset_path, split="train")
 
