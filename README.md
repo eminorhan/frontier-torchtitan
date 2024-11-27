@@ -38,11 +38,11 @@ Currently, the planned pretraining data consist of a combination of the followin
 
 * [Zyda-2](https://huggingface.co/datasets/Zyphra/Zyda-2), which is itself a cross-deduplicated and filtered combination of DCLM (3.3T), FineWeb-Edu (1.3T), Dolma (0.2T), Zyda (0.2T).
 
-* `python-edu` subset of the [`smollm-corpus`](https://huggingface.co/datasets/HuggingFaceTB/smollm-corpus) (4B).
+* Stack-2: [`the-stack-v2-train-smol-ids`](https://huggingface.co/datasets/bigcode/the-stack-v2-train-smol-ids) version (525B)
 
-* [`OpenWebMath`](https://huggingface.co/datasets/open-web-math/open-web-math) (14.7B)
+* [`OpenWebMath`](https://huggingface.co/datasets/open-web-math/open-web-math) (15B)
 
-The subdirectory [`download_scripts`](https://github.com/eminorhan/frontier-torchtitan/tree/master/download_scripts) contains basic Python scripts to download these datasets.
+The subdirectory [`download_scripts`](https://github.com/eminorhan/frontier-torchtitan/tree/master/download_scripts) contains basic Python scripts to download these datasets. The planned mixture weights for these components are currently as follows: DCLM (42%), FineWeb-Edu (42%), Dolma (3%), Zyda (2%), Stack-2 (10.5%), OpenWebMath (0.5%).
 
 ### Training
 The SLURM batch script in [`train_8B.sh`](https://github.com/eminorhan/frontier-torchtitan/blob/master/train_8B.sh) can be used to train a Llama-3.1-8B model with a context size of 8192 tokens. This script uses the training config file in [`train_configs/llama3_8b.toml`](https://github.com/eminorhan/frontier-torchtitan/blob/master/train_configs/llama3_8b.toml). Feel free to modify the config according to your needs.

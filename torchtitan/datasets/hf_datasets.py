@@ -91,18 +91,17 @@ class HuggingFaceDataset(IterableDataset, Stateful):
             ds_fwe = load_dataset("Zyphra/Zyda-2", name="fwe3", split="train", streaming=True).remove_columns("language_score")  # remove `language_score` column due to dtype mismatch with dclm
             ds_dolma = load_dataset("Zyphra/Zyda-2", name="dolma-cc_crossdeduped-filtered", split="train", streaming=True)
             ds_zyda = load_dataset("Zyphra/Zyda-2", name="zyda_crossdeduped-filtered", split="train", streaming=True)
-            ds_pyedu = load_from_disk("/lustre/orion/stf218/scratch/emin/huggingface/smollm-corpus-python-edu").to_iterable_dataset()
+            ds_stack = load_from_disk("/lustre/orion/stf218/scratch/emin/huggingface/stack_v2_small").to_iterable_dataset()
             ds_openwebmath = load_dataset("open-web-math/open-web-math", split="train", streaming=True)
             ds = interleave_datasets(
-                [ds_dclm, ds_fwe, ds_dolma, ds_zyda, ds_pyedu, ds_openwebmath],
-                probabilities=[0.47, 0.47, 0.034, 0.024, 0.001, 0.001], 
+                [ds_dclm, ds_fwe, ds_dolma, ds_zyda, ds_stack, ds_openwebmath],
+                probabilities=[0.42, 0.42, 0.03, 0.02, 0.105, 0.005], 
                 seed=1, 
                 stopping_strategy="all_exhausted"
                 )
         else:
             ds = load_dataset(dataset_path, split="train")
 
-        # TODO: support shuffling
         self._data = split_dataset_by_node(ds, rank, world_size)
         self.dataset_name = dataset_name
         self._tokenizer = tokenizer
