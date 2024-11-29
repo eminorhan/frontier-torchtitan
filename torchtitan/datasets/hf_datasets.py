@@ -3,7 +3,7 @@
 #
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
-
+import os
 import random
 import pickle
 from typing import Any, Dict, List, Optional
@@ -37,8 +37,7 @@ def extract_code(rec):
         text = ""
         for f in rec["files"]:
             text += f"<file_sep>{f["text"]}"
-    rec["text"] = text
-    return rec
+    return text
 
 class HuggingFaceDataset(IterableDataset, Stateful):
     """PyTorch Representation of the HuggingFace Dataset.
@@ -130,10 +129,11 @@ class HuggingFaceDataset(IterableDataset, Stateful):
 
         while True:
             for sample in self._get_data_iter():
-                sample = extract_code(sample) if "files" in sample.keys else sample  # handle code
-                column_name = "text" if "text" in sample.keys() else "content"
-                sample_text = sample[column_name]
-                # logger.info(f"[rank {int(os.environ["RANK"])}] {sample_text}")
+                if sample["files"] is None:
+                    sample_text = sample["text"]
+                else:
+                    sample_text = extract_code(sample)  # handle code
+                logger.info(f"[rank {int(os.environ["RANK"])}] {sample_text}")
                 sample_tokens = self._tokenizer.encode(sample_text, bos=True, eos=True)
                 self._all_tokens.extend(sample_tokens)
                 self._sample_idx += 1
@@ -147,12 +147,12 @@ class HuggingFaceDataset(IterableDataset, Stateful):
                     yield input, label
 
             if not self.infinite:
-                # logger.warning(f"Dataset {self.dataset_name} has run out of data")
+                logger.warning(f"Dataset {self.dataset_name} has run out of data")
                 break
             else:
                 # Reset offset for the next iteration
                 self._sample_idx = 0
-                # logger.warning(f"Dataset {self.dataset_name} is being re-looped")
+                logger.warning(f"Dataset {self.dataset_name} is being re-looped")
 
     def _get_data_iter(self):
         if self._sample_idx == 0:

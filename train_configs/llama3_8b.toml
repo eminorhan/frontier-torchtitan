@@ -25,16 +25,16 @@ name = "AdamW"
 lr = 3e-4
 
 [training]
-batch_size = 21
+batch_size = 1
 seq_len = 8192
 warmup_steps = 1000  # lr scheduler warm up
 max_norm = 1.0  # grad norm clipping
 steps = 150000
-data_parallel_replicate_degree = 18
-data_parallel_shard_degree = 32
+data_parallel_replicate_degree = 1
+data_parallel_shard_degree = 4
 tensor_parallel_degree = 8
 compile = false
-dataset = "c4"
+dataset = "full"
 
 [experimental]
 pipeline_parallel_degree = 1
@@ -43,7 +43,7 @@ pipeline_parallel_degree = 1
 enable_checkpoint = true
 folder = "checkpoint"
 interval_type = "steps"
-interval = 1100
+interval = 5
 model_weights_only = false
 export_dtype = "bfloat16"
 async_mode = "disabled"  # ["disabled", "async", "async_with_pinned_mem"]

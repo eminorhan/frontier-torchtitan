@@ -13,8 +13,7 @@ def extract_code(rec):
         text = ""
         for f in rec["files"]:
             text += f"<file_sep>{f['text']}"
-    rec["text"] = text
-    return rec
+    return text
 
 # make sure each component is iterable
 ds_dclm = load_dataset("Zyphra/Zyda-2", name="dclm_crossdeduped", split="train", streaming=True)
@@ -27,18 +26,20 @@ ds_openwebmath = load_dataset("open-web-math/open-web-math", split="train", stre
 # interleave componenets with given probabilities
 ds = interleave_datasets(
     [ds_dclm, ds_fwe,ds_dolma, ds_zyda, ds_stack, ds_openwebmath], 
-    probabilities=[0.0, 0.0, 0.0, 0.0, 1.0, 0.0], 
+    probabilities=[0.42, 0.42, 0.03, 0.02, 0.105, 0.005], 
     seed=1, 
     stopping_strategy="all_exhausted"
     )
 
 # print some examples
 for i, example in enumerate(ds):
-    if i >= 10:
+    if i >= 1000:
         break
-    if "files" in example.keys():
-        example = extract_code(example)
-    print(example["text"])    
+    if example["files"] is None:
+        sample_text = example["text"]
+    else:
+        sample_text = extract_code(example)  # handle code
+    print(sample_text)    
     # print(example.keys())
     # print(example['repo_name'])
     print("====================")

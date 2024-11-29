@@ -1,10 +1,10 @@
 #!/bin/bash
 
 #SBATCH --account=stf218
-#SBATCH --nodes=576
+#SBATCH --nodes=4
 #SBATCH --gpus-per-node=8
 #SBATCH --cpus-per-task=8
-#SBATCH --time=12:00:00
+#SBATCH --time=2:00:00
 #SBATCH --job-name=train_llama_8B
 #SBATCH --output=train_llama_8B_%A_%a.out
 #SBATCH --array=0
