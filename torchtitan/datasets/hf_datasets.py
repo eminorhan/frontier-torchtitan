@@ -4,7 +4,7 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-import os
+import random
 import pickle
 from typing import Any, Dict, List, Optional
 
@@ -26,6 +26,19 @@ _supported_datasets = {
     "full": "local cache",
 }
 
+def extract_code(rec):
+    files = rec["files"]
+    random.shuffle(files)
+    if random.random() < 0.5:
+        text = f"<repo_name>{rec["repo_name"]}"
+        for f in files:
+            text += f"<file_sep>{f["path"]}\n{f["text"]}"
+    else:
+        text = ""
+        for f in rec["files"]:
+            text += f"<file_sep>{f["text"]}"
+    rec["text"] = text
+    return rec
 
 class HuggingFaceDataset(IterableDataset, Stateful):
     """PyTorch Representation of the HuggingFace Dataset.
@@ -91,7 +104,7 @@ class HuggingFaceDataset(IterableDataset, Stateful):
             ds_fwe = load_dataset("Zyphra/Zyda-2", name="fwe3", split="train", streaming=True).remove_columns("language_score")  # remove `language_score` column due to dtype mismatch with dclm
             ds_dolma = load_dataset("Zyphra/Zyda-2", name="dolma-cc_crossdeduped-filtered", split="train", streaming=True)
             ds_zyda = load_dataset("Zyphra/Zyda-2", name="zyda_crossdeduped-filtered", split="train", streaming=True)
-            ds_stack = load_from_disk("/lustre/orion/stf218/scratch/emin/huggingface/stack_v2_small").to_iterable_dataset()
+            ds_stack = load_from_disk("/lustre/orion/stf218/scratch/emin/huggingface/stack_v2_smol").to_iterable_dataset()
             ds_openwebmath = load_dataset("open-web-math/open-web-math", split="train", streaming=True)
             ds = interleave_datasets(
                 [ds_dclm, ds_fwe, ds_dolma, ds_zyda, ds_stack, ds_openwebmath],
@@ -117,6 +130,7 @@ class HuggingFaceDataset(IterableDataset, Stateful):
 
         while True:
             for sample in self._get_data_iter():
+                sample = extract_code(sample) if "files" in sample.keys else sample  # handle code
                 column_name = "text" if "text" in sample.keys() else "content"
                 sample_text = sample[column_name]
                 # logger.info(f"[rank {int(os.environ["RANK"])}] {sample_text}")
