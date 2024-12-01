@@ -58,13 +58,13 @@ Otherwise, it becomes impossible to run on more than ~300 nodes due to communica
 ### Checkpoint conversions
 Two utility scripts to convert checkpoints between `DCP` and `torch.save` formats are provided here. [`llama_to_dcp.py`](https://github.com/eminorhan/frontier-torchtitan/blob/master/llama_to_dcp.py) converts a checkpoint saved with `torch.save` to `DCP` format. This is useful when initially converting the original Llama-3 checkpoints into `DCP` format to continue pretraining them with the code in this repository (you will most likely need to use this only once before starting continued pretaining). You can do this as follows:
 ```bash
-python llama_to_dcp.py --input_dir INPUT_DIR --ouput_dir OUTPUT_DIR
+python llama_to_dcp.py --input_dir INPUT_DIR --output_dir OUTPUT_DIR
 ```
 where `INPUT_DIR` is the directory where the original checkpoint is saved (downloaded from [here](https://huggingface.co/meta-llama/Llama-3.1-8B/tree/main/original) for the 8B model) and `OUTPUT_DIR` is the directory where the `DCP` checkpoint will be saved. The bulk of this script was copied from [this PR](https://github.com/pytorch/torchtitan/commit/3247841423429faf37bdf6918204350db293e482) by [`rlsl (Rasmus)`](https://github.com/rlrs). 
 
 For the conversion in the other direction (`DCP --> torch.save`), you can use the [`dcp_to_llama.py`](https://github.com/eminorhan/frontier-torchtitan/blob/master/dcp_to_llama.py) script like so:
 ```bash
-python dcp_to_llama.py --input_dir INPUT_DIR --ouput_dir OUTPUT_DIR
+python dcp_to_llama.py --input_dir INPUT_DIR --output_dir OUTPUT_DIR
 ```
 where `INPUT_DIR` now holds the `DCP` checkpoint and the `.pth` checkpoint will be saved in `OUTPUT_DIR`. You will need to do this conversion to evaluate the intermediate checkpoints. Optionally, you can also push the intermediate checkpoints (converted into `.pth` format) to huggingface by passing the argument `--push_to_hub`.
 

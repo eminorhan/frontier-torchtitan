@@ -27,16 +27,9 @@ _supported_datasets = {
 }
 
 def extract_code(rec):
-    files = rec["files"]
-    random.shuffle(files)
-    if random.random() < 0.5:
-        text = f"<repo_name>{rec["repo_name"]}"
-        for f in files:
-            text += f"<file_sep>{f["path"]}\n{f["text"]}"
-    else:
-        text = ""
-        for f in rec["files"]:
-            text += f"<file_sep>{f["text"]}"
+    text = ""
+    for f in rec["files"]:
+        text += f"\n\n{f["text"]}"
     return text
 
 class HuggingFaceDataset(IterableDataset, Stateful):
@@ -107,8 +100,8 @@ class HuggingFaceDataset(IterableDataset, Stateful):
             ds_openwebmath = load_dataset("open-web-math/open-web-math", split="train", streaming=True)
             ds = interleave_datasets(
                 [ds_dclm, ds_fwe, ds_dolma, ds_zyda, ds_stack, ds_openwebmath],
-                probabilities=[0.42, 0.42, 0.03, 0.02, 0.105, 0.005], 
-                seed=1, 
+                probabilities=[0.425, 0.425, 0.03, 0.02, 0.095, 0.005],
+                seed=1,
                 stopping_strategy="all_exhausted"
                 )
         else:
@@ -133,7 +126,7 @@ class HuggingFaceDataset(IterableDataset, Stateful):
                     sample_text = sample["text"]
                 else:
                     sample_text = extract_code(sample)  # handle code
-                logger.info(f"[rank {int(os.environ["RANK"])}] {sample_text}")
+                # logger.info(f"[rank {int(os.environ["RANK"])}] {sample_text}")
                 sample_tokens = self._tokenizer.encode(sample_text, bos=True, eos=True)
                 self._all_tokens.extend(sample_tokens)
                 self._sample_idx += 1
