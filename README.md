@@ -42,7 +42,17 @@ Currently, the planned pretraining data consist of a combination of the followin
 
 * [`OpenWebMath`](https://huggingface.co/datasets/open-web-math/open-web-math) (15B)
 
-The subdirectory [`download_scripts`](https://github.com/eminorhan/frontier-torchtitan/tree/master/download_scripts) contains basic Python scripts to download these datasets. The planned mixture weights for these components are currently as follows: DCLM (42%), FineWeb-Edu (42%), Dolma (3%), Zyda (2%), Stack-2 (10.5%), OpenWebMath (0.5%).
+The numbers in parentheses represent the approximate token counts (the full dataset has ~5.54T tokens). The subdirectory [`download_scripts`](https://github.com/eminorhan/frontier-torchtitan/tree/master/download_scripts) contains basic Python scripts to download these datasets. The planned mixture weights for these components are currently as follows: DCLM (42.5%), FineWeb-Edu (42.5%), Dolma (3%), Zyda (2%), Stack-2 (9.5%), OpenWebMath (0.5%).
+
+### Data loading strategy
+The data loading strategy is currently as follows (implemented [here](https://github.com/eminorhan/frontier-torchtitan/blob/master/torchtitan/datasets/hf_datasets.py)):
+
+* load individual component datasets in streaming mode (as iterable datasets)
+* interleave the component datasets using `ds.interleave_datasets()`
+* shuffle the combined dataset with a very large buffer size (`buffer_size=1000000`)
+* split the dataset across `dp` (data-parallel) ranks using `ds.split_dataset_by_node()`
+
+The shuffle is performed once at the beginning of each training session (due to job runtime limits on Frontier, each session takes ~12 hours after which we checkpoint and restart again). The shuffle operation shuffles the dataset shards as well as the rows in the buffer and the large buffer size ensures that all segments in the shard get a chance to be consumed during a ~12 hour training run session.
 
 ### Training
 The SLURM batch script in [`train_8B.sh`](https://github.com/eminorhan/frontier-torchtitan/blob/master/train_8B.sh) can be used to train a Llama-3.1-8B model with a context size of 8192 tokens. This script uses the training config file in [`train_configs/llama3_8b.toml`](https://github.com/eminorhan/frontier-torchtitan/blob/master/train_configs/llama3_8b.toml). Feel free to modify the config according to your needs.

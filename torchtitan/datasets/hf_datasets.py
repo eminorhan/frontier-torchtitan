@@ -128,7 +128,7 @@ class HuggingFaceDataset(IterableDataset, Stateful):
                     sample_text = sample["text"]
                 else:
                     sample_text = extract_code(sample)  # handle code
-                logger.info(f"[rank {int(os.environ["RANK"])}] {sample["id"]}, {self._seed}")  # test dataset iterator
+                # logger.info(f"[rank {int(os.environ["RANK"])}] {sample["nemo_id"]}, {sample["repo_name"]}, {sample["url"]}, {self._seed}")  # test dataset iterator
                 sample_tokens = self._tokenizer.encode(sample_text, bos=True, eos=True)
                 self._all_tokens.extend(sample_tokens)
 
