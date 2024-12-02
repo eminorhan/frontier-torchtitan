@@ -52,6 +52,13 @@ def main(job_config: JobConfig):
     # take control of garbage collection to avoid stragglers
     gc_handler = utils.GarbageCollection(gc_freq=job_config.training.gc_freq)
 
+    # set determinisism, use seed == None to skip deterministic training
+    utils.set_determinism(job_config.training.seed)
+    if job_config.training.seed is None:
+        logger.info("Deterministic training off")
+    else:
+        logger.info(f"Deterministic training on. Using seed: {job_config.training.seed}")
+
     # init distributed
     world_size = int(os.environ["WORLD_SIZE"])
     parallel_dims = ParallelDims(
@@ -97,6 +104,7 @@ def main(job_config: JobConfig):
         job_config.training.seq_len,
         dp_degree,
         dp_rank,
+        job_config.training.shuffle_seed
     )
 
     # build model (using meta init)

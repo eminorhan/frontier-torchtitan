@@ -1,10 +1,10 @@
 #!/bin/bash
 
 #SBATCH --account=stf218
-#SBATCH --nodes=576
+#SBATCH --nodes=8
 #SBATCH --gpus-per-node=8
 #SBATCH --cpus-per-task=8
-#SBATCH --time=02:00:00
+#SBATCH --time=00:10:00
 #SBATCH --job-name=train_llama_8B
 #SBATCH --output=train_llama_8B_%A_%a.out
 #SBATCH --array=0
@@ -41,7 +41,8 @@ export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 export MASTER_PORT=3442
 
 CONFIG_FILE=${CONFIG_FILE:-"./train_configs/llama3_8b.toml"}
+SHUFFLE_SEED=$((RANDOM % 9223372036854775807))
 
-srun torchrun --nnodes $SLURM_NNODES --nproc_per_node 8 --max_restarts 9 --node_rank $SLURM_NODEID --rdzv_id 101 --rdzv_backend c10d --rdzv_endpoint "$MASTER_ADDR:$MASTER_PORT" ./train.py --job.config_file ${CONFIG_FILE}
+srun torchrun --nnodes $SLURM_NNODES --nproc_per_node 8 --max_restarts 9 --node_rank $SLURM_NODEID --rdzv_id 101 --rdzv_backend c10d --rdzv_endpoint "$MASTER_ADDR:$MASTER_PORT" ./train.py --job.config_file ${CONFIG_FILE} --training.shuffle_seed ${SHUFFLE_SEED}
 
 echo "Done"

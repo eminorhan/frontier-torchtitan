@@ -7,12 +7,12 @@ def extract_code(rec):
     return text
 
 # make sure each component is iterable
-ds_dclm = load_dataset("Zyphra/Zyda-2", name="dclm_crossdeduped", split="train")
-ds_fwe = load_dataset("Zyphra/Zyda-2", name="fwe3", split="train").remove_columns("language_score")
-ds_dolma = load_dataset("Zyphra/Zyda-2", name="dolma-cc_crossdeduped-filtered", split="train")
-ds_zyda = load_dataset("Zyphra/Zyda-2", name="zyda_crossdeduped-filtered", split="train")
-ds_stack = load_from_disk("/lustre/orion/stf218/scratch/emin/huggingface/stack_v2_smol")
-ds_openwebmath = load_dataset("open-web-math/open-web-math", split="train")
+ds_dclm = load_dataset("Zyphra/Zyda-2", name="dclm_crossdeduped", split="train", streaming=True)
+ds_fwe = load_dataset("Zyphra/Zyda-2", name="fwe3", split="train", streaming=True).remove_columns("language_score")  # remove `language_score` column due to dtype mismatch with dclm
+ds_dolma = load_dataset("Zyphra/Zyda-2", name="dolma-cc_crossdeduped-filtered", split="train", streaming=True)
+ds_zyda = load_dataset("Zyphra/Zyda-2", name="zyda_crossdeduped-filtered", split="train", streaming=True)
+ds_stack = load_from_disk("/lustre/orion/stf218/scratch/emin/huggingface/stack_v2_smol").to_iterable_dataset()
+ds_openwebmath = load_dataset("open-web-math/open-web-math", split="train", streaming=True)
 
 # interleave componenets with given probabilities
 ds = interleave_datasets(
@@ -23,14 +23,14 @@ ds = interleave_datasets(
     )
 
 # print some examples
-for i, example in enumerate(ds):
-    if i >= 1000:
+for i, example in enumerate(ds.skip(1000000)):
+    if i >= 100:
         break
-    if example["files"] is None:
-        sample_text = example["text"]
-    else:
-        sample_text = extract_code(example)  # handle code
-    print(sample_text)    
+    # if example["files"] is None:
+    #     sample_text = example["text"]
+    # else:
+    #     sample_text = extract_code(example)  # handle code
+    print(example["id"])    
     # print(example.keys())
     # print(example['repo_name'])
     print("====================")

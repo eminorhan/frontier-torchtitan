@@ -4,7 +4,6 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 import os
-import random
 import pickle
 from typing import Any, Dict, List, Optional
 
@@ -17,7 +16,7 @@ from torchdata.stateful_dataloader import StatefulDataLoader
 from torchtitan.datasets.tokenizer import Tokenizer
 from torchtitan.logging import logger
 
-from datasets import Dataset, load_dataset, load_from_disk, interleave_datasets
+from datasets import load_dataset, load_from_disk, interleave_datasets
 from datasets.distributed import split_dataset_by_node
 
 # map from dataset name to a local directory, or a dataset repository on the HF hub
@@ -45,7 +44,6 @@ class HuggingFaceDataset(IterableDataset, Stateful):
         seq_len (int): max sequence length
         world_size (int): number of data parallel processes participating in training
         rank (int): rank of the current data parallel process
-        infinite (bool): whether to loop infinitely over the dataset
 
     We currently support the c4 dataset, and a subset of it for testing purposes:
     c4_test (2K training entries)
@@ -75,7 +73,7 @@ class HuggingFaceDataset(IterableDataset, Stateful):
         seq_len: int = 2048,
         world_size: int = 1,
         rank: int = 0,
-        infinite: bool = False,
+        shuffle_seed: int = 1
     ) -> None:
         # allow user to pass in a (local or HF hub) path to use unsupported datasets
         if dataset_name not in _supported_datasets:
@@ -92,12 +90,14 @@ class HuggingFaceDataset(IterableDataset, Stateful):
             # c4 is huge, and requires both streaming and subset selection
             ds = load_dataset(dataset_path, name="realnewslike", split="train", streaming=True)
         elif dataset_name == "full":
+            # 6 component datasets
             ds_dclm = load_dataset("Zyphra/Zyda-2", name="dclm_crossdeduped", split="train", streaming=True)
             ds_fwe = load_dataset("Zyphra/Zyda-2", name="fwe3", split="train", streaming=True).remove_columns("language_score")  # remove `language_score` column due to dtype mismatch with dclm
             ds_dolma = load_dataset("Zyphra/Zyda-2", name="dolma-cc_crossdeduped-filtered", split="train", streaming=True)
             ds_zyda = load_dataset("Zyphra/Zyda-2", name="zyda_crossdeduped-filtered", split="train", streaming=True)
             ds_stack = load_from_disk("/lustre/orion/stf218/scratch/emin/huggingface/stack_v2_smol").to_iterable_dataset()
             ds_openwebmath = load_dataset("open-web-math/open-web-math", split="train", streaming=True)
+
             ds = interleave_datasets(
                 [ds_dclm, ds_fwe, ds_dolma, ds_zyda, ds_stack, ds_openwebmath],
                 probabilities=[0.425, 0.425, 0.03, 0.02, 0.095, 0.005],
@@ -107,29 +107,30 @@ class HuggingFaceDataset(IterableDataset, Stateful):
         else:
             ds = load_dataset(dataset_path, split="train")
 
-        self._data = split_dataset_by_node(ds, rank, world_size)
+        # shuffle data
+        self._seed = shuffle_seed
+        self._data = ds.shuffle(buffer_size=1000000, seed=self._seed)
+
+        # split across dp ranks
+        self._data = split_dataset_by_node(self._data, rank, world_size)
+
         self.dataset_name = dataset_name
         self._tokenizer = tokenizer
         self.seq_len = seq_len
-        self.infinite = infinite
-
-        # variables for checkpointing
-        self._sample_idx = 0
         self._all_tokens: List[int] = []
 
     def __iter__(self):
         max_buffer_token_len = 1 + self.seq_len
 
         while True:
-            for sample in self._get_data_iter():
+            for sample in iter(self._data):
                 if sample["files"] is None:
                     sample_text = sample["text"]
                 else:
                     sample_text = extract_code(sample)  # handle code
-                # logger.info(f"[rank {int(os.environ["RANK"])}] {sample_text}")
+                logger.info(f"[rank {int(os.environ["RANK"])}] {sample["id"]}, {self._seed}")  # test dataset iterator
                 sample_tokens = self._tokenizer.encode(sample_text, bos=True, eos=True)
                 self._all_tokens.extend(sample_tokens)
-                self._sample_idx += 1
 
                 while len(self._all_tokens) >= max_buffer_token_len:
                     x = torch.LongTensor(self._all_tokens[:max_buffer_token_len])
@@ -138,31 +139,6 @@ class HuggingFaceDataset(IterableDataset, Stateful):
                     input = x[:-1]
                     label = x[1:]
                     yield input, label
-
-            if not self.infinite:
-                logger.warning(f"Dataset {self.dataset_name} has run out of data")
-                break
-            else:
-                # Reset offset for the next iteration
-                self._sample_idx = 0
-                logger.warning(f"Dataset {self.dataset_name} is being re-looped")
-
-    def _get_data_iter(self):
-        if self._sample_idx == 0:
-            return iter(self._data)
-
-        # As skipping to the end throws an error in case of map-style dataset, return an empty iterator
-        if isinstance(self._data, Dataset) and self._sample_idx == len(self._data):
-            return iter([])
-
-        return iter(self._data.skip(self._sample_idx))
-
-    def load_state_dict(self, state_dict):
-        self._sample_idx = state_dict["sample_idx"]
-        self._all_tokens = state_dict["token_buffer"]
-
-    def state_dict(self):
-        return {"token_buffer": self._all_tokens, "sample_idx": self._sample_idx}
 
 
 class DPAwareDataLoader(StatefulDataLoader, Stateful):
@@ -198,8 +174,8 @@ def build_hf_data_loader(
     seq_len: int,
     world_size,
     rank,
-    infinite: bool = True,
+    shuffle_seed
 ):
-    hf_ds = HuggingFaceDataset(dataset_name, dataset_path, tokenizer, seq_len, world_size, rank, infinite)
+    hf_ds = HuggingFaceDataset(dataset_name, dataset_path, tokenizer, seq_len, world_size, rank, shuffle_seed)
 
     return DPAwareDataLoader(rank, hf_ds, batch_size=batch_size)
