@@ -52,7 +52,7 @@ The data loading strategy is currently as follows (implemented [here](https://gi
 * shuffle the combined dataset with a very large buffer size (`buffer_size=1000000`) and a globally shared random seed
 * split the dataset across `dp` (data-parallel) ranks using `ds.split_dataset_by_node()`
 
-The shuffle is performed once at the beginning of each training session with a fresh global random shuffling seed (due to job runtime limits on Frontier, each session takes ~12 hours after which we checkpoint and restart again). The shuffle operation shuffles the dataset shards as well as the rows in the buffer and the large buffer size ensures that all segments in the shard get a chance to be consumed during a ~12 hour training session.
+The shuffle is performed once at the beginning of each training session with a fresh global random shuffling seed (due to job runtime limits on Frontier, each session takes ~12 hours after which we checkpoint and restart again). The shuffle operation shuffles the dataset shards as well as the rows in the buffer and the large buffer size ensures that all data rows in the shard get a chance to be consumed during a ~12 hour training session.
 
 ### Training
 The SLURM batch script in [`train_8B.sh`](https://github.com/eminorhan/frontier-torchtitan/blob/master/train_8B.sh) can be used to train a Llama-3.1-8B model with a context size of 8192 tokens. This script uses the training config file in [`train_configs/llama3_8b.toml`](https://github.com/eminorhan/frontier-torchtitan/blob/master/train_configs/llama3_8b.toml). Feel free to modify the config according to your needs.

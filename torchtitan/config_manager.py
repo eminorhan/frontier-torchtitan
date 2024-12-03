@@ -522,8 +522,8 @@ class JobConfig:
         self.parser.add_argument(
             "--comm.init_timeout_seconds",
             type=int,
-            default=300,
-            help="Timeout for communication operations, during initialization and first train step.",
+            default=900,
+            help="Timeout for communication operations, during initialization and first train step (default: 15 mins).",
         )
         self.parser.add_argument(
             "--comm.train_timeout_seconds",
