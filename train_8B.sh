@@ -8,7 +8,7 @@
 #SBATCH --job-name=train_llama_8B
 #SBATCH --output=train_llama_8B_%A_%a.out
 #SBATCH --array=0
-#SBATCH --qos=debug
+##SBATCH --qos=debug
 
 # set proxy server to enable communication with outside
 export all_proxy=socks://proxy.ccs.ornl.gov:3128/
