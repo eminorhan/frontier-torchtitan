@@ -223,18 +223,19 @@ def main(job_config: JobConfig):
         f"total steps {job_config.training.steps} "
         f"(warmup {job_config.training.warmup_steps})"
     )
+        
     with maybe_enable_profiling(job_config, global_step=train_state.step) as torch_profiler, maybe_enable_memory_snapshot(job_config, global_step=train_state.step) as memory_profiler:
         while train_state.step < job_config.training.steps:
             train_state.step += 1
             gc_handler.run(train_state.step)
-
+            
             # get batch
             data_load_start = time.perf_counter()
             batch = next(data_iterator)
             input_ids, labels = batch
             ntokens_since_last_log += labels.numel()
             data_loading_times.append(time.perf_counter() - data_load_start)
-
+            
             input_ids = input_ids.cuda()
             labels = labels.cuda()
             optimizers.zero_grad()
