@@ -42,7 +42,7 @@ Currently, the planned pretraining data consist of a combination of the followin
 
 * [`OpenWebMath`](https://huggingface.co/datasets/open-web-math/open-web-math) (15B)
 
-The numbers in parentheses represent the approximate token counts (the full dataset has ~5.54T tokens). The subdirectory [`download_scripts`](https://github.com/eminorhan/frontier-torchtitan/tree/master/download_scripts) contains basic Python scripts to download these datasets. The planned mixture weights for these components are currently as follows: DCLM (42.5%), FineWeb-Edu (42.5%), Dolma (3%), Zyda (2%), Stack-2 (9.5%), OpenWebMath (0.5%).
+The numbers in parentheses represent the approximate token counts (the full dataset has ~5.54T tokens). The subdirectory [`download_scripts`](https://github.com/eminorhan/frontier-torchtitan/tree/master/download_scripts) contains basic Python scripts to download these datasets. The planned mixture weights for these components are currently as follows: DCLM (40%), FineWeb-Edu (45%), Dolma (3%), Zyda (2%), Stack-2 (9.5%), OpenWebMath (0.5%).
 
 ### Data loading strategy
 The data loading strategy is currently as follows (implemented [here](https://github.com/eminorhan/frontier-torchtitan/blob/master/torchtitan/datasets/hf_datasets.py)):

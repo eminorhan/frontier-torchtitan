@@ -16,8 +16,11 @@ from torchdata.stateful_dataloader import StatefulDataLoader
 from torchtitan.datasets.tokenizer import Tokenizer
 from torchtitan.logging import logger
 
+import datasets
 from datasets import load_dataset, load_from_disk, interleave_datasets
 from datasets.distributed import split_dataset_by_node
+
+datasets.logging.set_verbosity_error()
 
 # map from dataset name to a local directory, or a dataset repository on the HF hub
 _supported_datasets = {
@@ -105,7 +108,7 @@ class HuggingFaceDataset(IterableDataset, Stateful):
             # interleave component datasets with given mixing probabilities
             ds = interleave_datasets(
                 [ds_dclm, ds_fwe, ds_dolma, ds_zyda, ds_stack, ds_openwebmath],
-                probabilities=[0.425, 0.425, 0.03, 0.02, 0.095, 0.005],
+                probabilities=[0.4, 0.45, 0.03, 0.02, 0.095, 0.005],
                 seed=self._seed,
                 stopping_strategy="all_exhausted"
                 )

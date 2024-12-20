@@ -523,7 +523,7 @@ class JobConfig:
             "--comm.init_timeout_seconds",
             type=int,
             default=900,
-            help="Timeout for communication operations, during initialization and first train step (default: 15 mins).",
+            help="Timeout for communication operations, during initialization and first train step (default: 15*8 mins).",
         )
         self.parser.add_argument(
             "--comm.train_timeout_seconds",
@@ -537,7 +537,7 @@ class JobConfig:
         self.parser.add_argument(
             "--comm.trace_buf_size",
             type=int,
-            default=20000,
+            default=0,
             help="Flight recorder ring buffer size, >0 means recording by default, 0 means disabled",
         )
 
