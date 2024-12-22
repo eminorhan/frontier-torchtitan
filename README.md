@@ -34,7 +34,7 @@ Here, `gfx90a` is the correct GPU architecture choice for MI250X. In the last st
 * Install the `aws-ofi-rccl` plugin, which enables `rccl` (AMD ROCm's version of `nccl`) to use `libfabric` for a more performant interconnect. I provide a shell script here ([`aws_ofi_rccl.sh`](https://github.com/eminorhan/frontier-torchtitan/blob/master/aws_ofi_rccl.sh)) to install this plugin. Simply run this script (*e.g.* `sh aws_ofi_rccl.sh`) to install the plugin (the script assumes that your ROCm version is 6.2.0; if you're using a different version, change it accordingly).
 
 ### Pretraining data
-Currently, the planned pretraining data consist of a combination of the following datasets:
+Currently, the pretraining data consist of a combination of the following datasets:
 
 * [Zyda-2](https://huggingface.co/datasets/Zyphra/Zyda-2), which is itself a cross-deduplicated and filtered combination of DCLM (3.3T), FineWeb-Edu (1.3T), Dolma (0.2T), Zyda (0.2T).
 
@@ -42,7 +42,7 @@ Currently, the planned pretraining data consist of a combination of the followin
 
 * [`FineMath`](https://huggingface.co/datasets/HuggingFaceTB/finemath): the `finemath-3plus` subset (34B).
 
-The numbers in parentheses represent the approximate token counts (the full dataset has ~5.54T tokens). The subdirectory [`download_scripts`](https://github.com/eminorhan/frontier-torchtitan/tree/master/download_scripts) contains basic Python scripts to download these datasets. The planned mixture weights for these components are currently as follows: DCLM (40%), FineWeb-Edu (44%), Dolma (3%), Zyda (2%), Stack-2 (10%), FineMath (1%).
+The numbers in parentheses represent the approximate token counts (the full dataset has ~5.56T tokens). The subdirectory [`download_scripts`](https://github.com/eminorhan/frontier-torchtitan/tree/master/download_scripts) contains basic Python scripts to download these datasets. The mixture weights for these components are currently as follows (in terms of data rows, not tokens): DCLM (40%), FineWeb-Edu (44%), Dolma (3%), Zyda (2%), Stack-2 (10%), FineMath (1%).
 
 ### Data loading strategy
 The data loading strategy is currently as follows (implemented [here](https://github.com/eminorhan/frontier-torchtitan/blob/master/torchtitan/datasets/hf_datasets.py)):
