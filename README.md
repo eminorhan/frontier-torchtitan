@@ -38,11 +38,11 @@ Currently, the planned pretraining data consist of a combination of the followin
 
 * [Zyda-2](https://huggingface.co/datasets/Zyphra/Zyda-2), which is itself a cross-deduplicated and filtered combination of DCLM (3.3T), FineWeb-Edu (1.3T), Dolma (0.2T), Zyda (0.2T).
 
-* Stack-2: [`the-stack-v2-train-smol-ids`](https://huggingface.co/datasets/bigcode/the-stack-v2-train-smol-ids) version (525B)
+* Stack-2: the [`the-stack-v2-train-smol-ids`](https://huggingface.co/datasets/bigcode/the-stack-v2-train-smol-ids) subset (525B).
 
-* [`OpenWebMath`](https://huggingface.co/datasets/open-web-math/open-web-math) (15B)
+* [`FineMath`](https://huggingface.co/datasets/HuggingFaceTB/finemath): the `finemath-3plus` subset (34B).
 
-The numbers in parentheses represent the approximate token counts (the full dataset has ~5.54T tokens). The subdirectory [`download_scripts`](https://github.com/eminorhan/frontier-torchtitan/tree/master/download_scripts) contains basic Python scripts to download these datasets. The planned mixture weights for these components are currently as follows: DCLM (40%), FineWeb-Edu (45%), Dolma (3%), Zyda (2%), Stack-2 (9.5%), OpenWebMath (0.5%).
+The numbers in parentheses represent the approximate token counts (the full dataset has ~5.54T tokens). The subdirectory [`download_scripts`](https://github.com/eminorhan/frontier-torchtitan/tree/master/download_scripts) contains basic Python scripts to download these datasets. The planned mixture weights for these components are currently as follows: DCLM (40%), FineWeb-Edu (44%), Dolma (3%), Zyda (2%), Stack-2 (10%), FineMath (1%).
 
 ### Data loading strategy
 The data loading strategy is currently as follows (implemented [here](https://github.com/eminorhan/frontier-torchtitan/blob/master/torchtitan/datasets/hf_datasets.py)):

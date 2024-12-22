@@ -52,12 +52,8 @@ def main(job_config: JobConfig):
     # take control of garbage collection to avoid stragglers
     gc_handler = utils.GarbageCollection(gc_freq=job_config.training.gc_freq)
 
-    # set determinisism, use seed == None to skip deterministic training
+    # set determinism, use seed == None to skip deterministic training
     utils.set_determinism(job_config.training.seed)
-    if job_config.training.seed is None:
-        logger.info("Deterministic training off")
-    else:
-        logger.info(f"Deterministic training on. Using seed: {job_config.training.seed}")
 
     # init distributed
     world_size = int(os.environ["WORLD_SIZE"])
@@ -76,7 +72,6 @@ def main(job_config: JobConfig):
     # initialize GPU memory monitor and get peak flops for MFU calculation
     gpu_memory_monitor = build_gpu_memory_monitor()
     gpu_peak_flops = utils.get_peak_flops(gpu_memory_monitor.device_name)
-    logger.info(f"Peak FLOPS used for computing MFU: {gpu_peak_flops:.3e}")
 
     # build meshes
     world_mesh = parallel_dims.build_mesh(device_type="cuda")
@@ -118,7 +113,6 @@ def main(job_config: JobConfig):
     model_config.vocab_size = tokenizer.n_words
     model_config.max_seq_len = job_config.training.seq_len
 
-    logger.info(f"Building {model_name} {job_config.model.flavor} with {model_config}")
     with torch.device("meta"):
         model = model_cls.from_model_args(model_config)
 
@@ -128,9 +122,7 @@ def main(job_config: JobConfig):
     float8_handler.convert_to_float8_training(model)
 
     # log model size
-    model_param_count = utils.get_num_params(model)
     num_flop_per_token = utils.get_num_flop_per_token(utils.get_num_params(model, exclude_embedding=True), model_config, job_config.training.seq_len)
-    logger.info(f"{color.blue}Model: {model_name} {job_config.model.flavor} {color.red}Size: {model_param_count:,} params {color.reset}")
 
     # loss function to be shared by Pipeline Parallel and SPMD training
     def loss_fn(pred, labels):
@@ -147,8 +139,7 @@ def main(job_config: JobConfig):
             # apply SPMD-style PT-D techniques
             models_parallelize_fns[model_name](m, world_mesh, parallel_dims, job_config)
             m.to_empty(device="cuda")
-            with torch.no_grad():
-                m.init_weights()
+            m.init_weights()
             m.train()
     else:
         # apply PT-D Tensor Parallel, activation checkpointing, torch.compile, Data Parallel
@@ -158,8 +149,7 @@ def main(job_config: JobConfig):
         init_device = "cpu" if job_config.checkpoint.create_seed_checkpoint else "cuda"
 
         model.to_empty(device=init_device)
-        with torch.no_grad():    
-            model.init_weights()
+        model.init_weights()
         model.train()
 
         model_parts = [model]
