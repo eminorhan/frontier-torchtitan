@@ -98,12 +98,12 @@ class HuggingFaceDataset(IterableDataset, Stateful):
             ds = load_dataset(dataset_path, name="realnewslike", split="train")
         elif dataset_name == "full":
             # 6 component datasets
-            ds_dclm = load_dataset("Zyphra/Zyda-2", name="dclm_crossdeduped", split="train", streaming=True)
-            ds_fwe = load_dataset("Zyphra/Zyda-2", name="fwe3", split="train", streaming=True).remove_columns("language_score")  # remove `language_score` column due to dtype mismatch with dclm
-            ds_dolma = load_dataset("Zyphra/Zyda-2", name="dolma-cc_crossdeduped-filtered", split="train", streaming=True)
-            ds_zyda = load_dataset("Zyphra/Zyda-2", name="zyda_crossdeduped-filtered", split="train", streaming=True)
-            ds_stack = load_from_disk("/lustre/orion/stf218/scratch/emin/huggingface/stack_v2_smol").to_iterable_dataset(num_shards=3000)
-            ds_finemath = load_dataset("HuggingFaceTB/finemath", name="finemath-3plus", split="train", streaming=True)
+            ds_dclm = load_dataset("Zyphra/Zyda-2", name="dclm_crossdeduped", split="train", streaming=True).select_columns("text")
+            ds_fwe = load_dataset("Zyphra/Zyda-2", name="fwe3", split="train", streaming=True).select_columns("text")
+            ds_dolma = load_dataset("Zyphra/Zyda-2", name="dolma-cc_crossdeduped-filtered", split="train", streaming=True).select_columns("text")
+            ds_zyda = load_dataset("Zyphra/Zyda-2", name="zyda_crossdeduped-filtered", split="train", streaming=True).select_columns("text")
+            ds_stack = load_from_disk("/lustre/orion/stf218/scratch/emin/huggingface/stack_v2_smol").to_iterable_dataset(num_shards=3000).select_columns("files")
+            ds_finemath = load_dataset("HuggingFaceTB/finemath", name="finemath-3plus", split="train", streaming=True).select_columns("text")
 
             # interleave component datasets with given mixing probabilities
             ds = interleave_datasets(

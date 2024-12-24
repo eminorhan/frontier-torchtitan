@@ -4,7 +4,7 @@
 #SBATCH --nodes=256
 #SBATCH --gpus-per-node=8
 #SBATCH --cpus-per-task=8
-#SBATCH --time=1:00:00
+#SBATCH --time=0:30:00
 #SBATCH --job-name=train_llama_8B_n256
 #SBATCH --output=train_llama_8B_n256_%A_%a.out
 #SBATCH --array=0
