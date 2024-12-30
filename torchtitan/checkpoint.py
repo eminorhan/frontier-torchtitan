@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from io import BytesIO
 from multiprocessing import get_context
 from typing import Any, Dict, List, Union
+from datetime import timedelta
 
 import torch
 import torch.distributed as dist
@@ -208,7 +209,7 @@ class CheckpointManager:
         self.begin_time = 0
         self.time_sync_work = None
         self.time_sync_result = None
-        self.pg = dist.new_group(backend="gloo")
+        self.pg = dist.new_group(backend="gloo", timeout=timedelta(seconds=7200))  # set timeout of 2 hours (ugh, fuck you AMD!)
 
         self.model_weights_only = ckpt_config.model_weights_only
         self.export_dtype = TORCH_DTYPE_MAP[ckpt_config.export_dtype]
