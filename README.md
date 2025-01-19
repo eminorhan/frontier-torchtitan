@@ -29,7 +29,7 @@ git clone https://github.com/ROCm/flash-attention.git
 cd flash-attention/
 GPU_ARCHS=gfx90a python setup.py install  # MI200 series
 ```
-Here, `gfx90a` is the correct GPU architecture choice for MI250X. In the last step, make sure to build with `ninja` (`pip install ninja` if it's not already installed), otherwise it might take forever. Also, make sure to set your ROCm home directory correctly for the installation to proceed: *e.g.* `export ROCM_HOME=/opt/rocm-6.2.0` for ROCm 6.2.
+Here, `gfx90a` is the correct GPU architecture choice for MI250X. In the last step, make sure to build with `ninja` (`pip install ninja` if it's not already installed), otherwise it might take forever. Before running the above, make sure to set your ROCm home directory correctly for the installation to proceed: *e.g.* `export ROCM_HOME=/opt/rocm-6.2.0` for ROCm 6.2; also set `export MAX_JOBS=64` or something large like that to speed up the installation.
 
 * Install the `aws-ofi-rccl` plugin, which enables `rccl` (AMD ROCm's version of `nccl`) to use `libfabric` for a more performant interconnect. I provide a shell script here ([`aws_ofi_rccl.sh`](https://github.com/eminorhan/frontier-torchtitan/blob/master/aws_ofi_rccl.sh)) to install this plugin. Simply run this script (*e.g.* `sh aws_ofi_rccl.sh`) to install the plugin (the script assumes that your ROCm version is 6.2.0; if you're using a different version, change it accordingly).
 
@@ -57,7 +57,7 @@ The shuffle is performed once at the beginning of each training session with a f
 This data loading pipeline is preferred over the one implemented in the torchtitan library ([here](https://github.com/pytorch/torchtitan/blob/main/torchtitan/datasets/hf_datasets.py)), which checkpoints a `_sample_idx` variable and attempts to skip to that idx at the beginning of the next training session, since I couldn't verify that this implementation works correctly (I observed that after resuming the checkpoint, the data loader would keep sampling some of the same data rows from the previous sessions, which should have been skipped).
 
 ### Training
-The SLURM batch script in [`train_8B.sh`](https://github.com/eminorhan/frontier-torchtitan/blob/master/train_8B.sh) can be used to train a Llama-3.1-8B model with a context size of 8192 tokens. This script uses the training config file in [`train_configs/llama3_8b.toml`](https://github.com/eminorhan/frontier-torchtitan/blob/master/train_configs/llama3_8b.toml). Feel free to modify the config according to your needs.
+The SLURM batch script in [`train_8B_n64.sh`](https://github.com/eminorhan/frontier-torchtitan/blob/master/train_8B_n64.sh) can be used to train a Llama-3.1-8B model with a context size of 8192 tokens over 64 Frontier nodes. This script uses the training config file in [`train_configs/llama3_8b_n64.toml`](https://github.com/eminorhan/frontier-torchtitan/blob/master/train_configs/llama3_8b_n64.toml). Feel free to modify the config according to your needs.
 
 ### A note on IP network interfaces
 For loading and saving distributed checkpoints, the code uses the `torch.distributed.checkpoint` (DCP) library. A new process group with the `gloo` backend is created for this purpose (separate from the process group used by `nccl` for training). In my experience, the IP network interface to be used by both `gloo` and `nccl` needs to be explicitly set to `hsn0`, *i.e.*:

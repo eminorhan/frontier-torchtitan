@@ -1,4 +1,6 @@
 from datasets import load_from_disk
+import os
+os.environ['CURL_CA_BUNDLE'] = ''
 
 # make sure each component is iterable
 ds_stack = load_from_disk("/lustre/orion/stf218/scratch/emin/huggingface/stack_v2_smol")
