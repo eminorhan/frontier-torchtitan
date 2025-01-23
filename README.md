@@ -22,7 +22,7 @@ python torchtitan/datasets/download_tokenizer.py --repo_id meta-llama/Meta-Llama
 
 where `hf_token` is your Hugging Face Hub token.
 
-* Unlike for CUDA, you will need to install FlashAttention-2 for ROCm separately. [This page](https://rocm.docs.amd.com/en/latest/how-to/llm-fine-tuning-optimization/model-acceleration-libraries.html) provides the instructions for that. Basically, to intall from source:
+* Unlike for CUDA, you will need to install FlashAttention-2 for ROCm separately. [This page](https://rocm.docs.amd.com/en/latest/how-to/llm-fine-tuning-optimization/model-acceleration-libraries.html) provides the instructions for that. Basically, to install from source:
 
 ```bash
 git clone https://github.com/ROCm/flash-attention.git
@@ -52,7 +52,7 @@ The data loading strategy is currently as follows (implemented [here](https://gi
 * shuffle the combined dataset with a large buffer size (`buffer_size=100000`) and a globally shared random seed
 * split the dataset across `dp` (data-parallel) ranks using `ds.split_dataset_by_node()`
 
-The shuffle is performed once at the beginning of each training session with a fresh global random shuffling seed (due to job runtime limits on Frontier, each session takes ~12 hours after which we checkpoint and restart again). The shuffle operation shuffles the dataset shards as well as the rows in the buffer and the large buffer size ensures that all data rows in the shard get a chance to be consumed during a ~12 hour training session.
+The shuffle is performed once at the beginning of each training session with a fresh global random shuffling seed (due to job runtime limits on Frontier, each session takes 24 hours at most after which we checkpoint and restart again). The shuffle operation shuffles the dataset shards as well as the rows in the buffer and the large buffer size ensures that all data rows in the shard get a chance to be consumed during a ~24 hour training session.
 
 This data loading pipeline is preferred over the one implemented in the torchtitan library ([here](https://github.com/pytorch/torchtitan/blob/main/torchtitan/datasets/hf_datasets.py)), which checkpoints a `_sample_idx` variable and attempts to skip to that idx at the beginning of the next training session, since I couldn't verify that this implementation works correctly (I observed that after resuming the checkpoint, the data loader would keep sampling some of the same data rows from the previous sessions, which should have been skipped).
 
