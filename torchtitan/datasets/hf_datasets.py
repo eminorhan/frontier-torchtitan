@@ -95,7 +95,7 @@ class HuggingFaceDataset(IterableDataset, Stateful):
 
         if dataset_name == "c4":
             # c4 is huge, and requires both streaming and subset selection
-            ds = load_dataset(dataset_path, name="realnewslike", split="train")
+            ds = load_dataset(dataset_path, name="realnewslike", split="train", streaming=True)
         elif dataset_name == "full":
             # 6 component datasets
             ds_dclm = load_dataset("Zyphra/Zyda-2", name="dclm_crossdeduped", split="train", streaming=True).select_columns("text")
@@ -113,7 +113,7 @@ class HuggingFaceDataset(IterableDataset, Stateful):
                 stopping_strategy="all_exhausted"
                 )
         else:
-            ds = load_dataset(dataset_path, split="train")
+            ds = load_dataset(dataset_path, split="train", streaming=True)
 
         # shuffle shards and buffer
         ds = ds.shuffle(buffer_size=100000, seed=self._seed)
