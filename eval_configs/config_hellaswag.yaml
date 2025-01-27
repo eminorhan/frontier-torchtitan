@@ -30,7 +30,7 @@ tasks: ["hellaswag"]
 
 limit: null
 max_seq_length: 4096
-batch_size: 12
+batch_size: 2
 enable_kv_cache: True
 
 # Quantization specific args

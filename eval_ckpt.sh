@@ -4,10 +4,10 @@
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-task=8
-#SBATCH --time=2:00:00
+#SBATCH --time=00:20:00
 #SBATCH --job-name=eval_ckpt
 #SBATCH --output=eval_ckpt_%A_%a.out
-#SBATCH --array=0-8
+#SBATCH --array=8
 #SBATCH --qos=debug
 
 # set proxy server to enable communication with outside
@@ -21,7 +21,7 @@ export no_proxy='localhost,127.0.0.0/8,*.ccs.ornl.gov'
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
 export HF_HOME="/lustre/orion/stf218/scratch/emin/huggingface"
 export HF_DATASETS_CACHE="/lustre/orion/stf218/scratch/emin/huggingface"
-export HF_HUB_OFFLINE=1
+# export HF_HUB_OFFLINE=1
 
 # irectory where eval config files are stored
 CONFIG_DIR="/lustre/orion/stf218/scratch/emin/torchtitan/eval_configs"

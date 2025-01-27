@@ -22,7 +22,7 @@ tokenizer_path = "./torchtitan/datasets/tokenizer/original/tokenizer.model"
 
 [optimizer]
 name = "AdamW"
-lr = 3e-4
+lr = 3e-5
 
 [training]
 batch_size = 21
