@@ -131,10 +131,13 @@ class HuggingFaceDataset(IterableDataset, Stateful):
 
         while True:
             for sample in iter(self._data):
-                if sample["files"] is None:
+                if "files" not in sample:
                     sample_text = sample["text"]
                 else:
-                    sample_text = extract_code(sample)  # handle code
+                    if sample["files"] is None:
+                        sample_text = sample["text"]
+                    else:
+                        sample_text = extract_code(sample)  # handle code
                 # logger.info(f"[rank {int(os.environ["RANK"])}] {sample["nemo_id"]}, {sample["repo_name"]}, {sample["url"]}, {self._seed}")  # test dataset iterator
                 sample_tokens = self._tokenizer.encode(sample_text, bos=True, eos=True)
                 self._all_tokens.extend(sample_tokens)
