@@ -1,4 +1,4 @@
-rocm_version=6.2.0
+rocm_version=6.3.1
 
 # Load modules
 module load PrgEnv-gnu/8.5.0
@@ -7,7 +7,7 @@ module load craype-accel-amd-gfx90a
 module load gcc-native/12.3
 module load cray-mpich/8.1.28
 module load libtool
-libfabric_path=/opt/cray/libfabric/1.15.2.0
+libfabric_path=/opt/cray/libfabric/1.22.0
 
 # Download the plugin repo
 git clone --recursive https://github.com/ROCm/aws-ofi-rccl
