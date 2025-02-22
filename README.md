@@ -3,11 +3,11 @@
 This is a copy of the [`torchtitan`](https://github.com/pytorch/torchtitan) library that I use to run LLM training experiments on Frontier. 
 
 ### Prerequisites
-* Install PyTorch nightly with ROCm 6.2:
+* Install PyTorch nightly with ROCm 6.3:
 ```bash
-pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/rocm6.2
+pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/rocm6.3
 ```
-My PyTorch-ROCm version is nightly `2.6.0.dev20241005+rocm6.2` and I think a reasonably recent nightly version is necessary to reproduce the results below.
+My PyTorch-ROCm version is nightly `2.7.0.dev20250221+rocm6.3` and I think a reasonably recent nightly version is necessary to reproduce the results below.
 
 * Clone this repo and install the following packages:
 ```bash
@@ -29,9 +29,9 @@ git clone https://github.com/ROCm/flash-attention.git
 cd flash-attention/
 GPU_ARCHS=gfx90a python setup.py install  # MI200 series
 ```
-Here, `gfx90a` is the correct GPU architecture choice for MI250X. In the last step, make sure to build with `ninja` (`pip install ninja` if it's not already installed), otherwise it might take forever. Before running the above, make sure to set your ROCm home directory correctly for the installation to proceed: *e.g.* `export ROCM_HOME=/opt/rocm-6.2.0` for ROCm 6.2; also set `export MAX_JOBS=64` or something large like that to speed up the installation.
+Here, `gfx90a` is the correct GPU architecture choice for MI250X. In the last step, make sure to build with `ninja` (`pip install ninja` if it's not already installed), otherwise it might take forever. Before running the above, make sure to set your ROCm home directory correctly for the installation to proceed: *e.g.* `export ROCM_HOME=/opt/rocm-6.3.1` for ROCm 6.3; also set `export MAX_JOBS=64` or something large like that to speed up the installation.
 
-* Install the `aws-ofi-rccl` plugin, which enables `rccl` (AMD ROCm's version of `nccl`) to use `libfabric` for a more performant interconnect. I provide a shell script here ([`aws_ofi_rccl.sh`](https://github.com/eminorhan/frontier-torchtitan/blob/master/aws_ofi_rccl.sh)) to install this plugin. Simply run this script (*e.g.* `sh aws_ofi_rccl.sh`) to install the plugin (the script assumes that your ROCm version is 6.2.0; if you're using a different version, change it accordingly).
+* Install the `aws-ofi-rccl` plugin, which enables `rccl` (AMD ROCm's version of `nccl`) to use `libfabric` for a more performant interconnect. I provide a shell script here ([`aws_ofi_rccl.sh`](https://github.com/eminorhan/frontier-torchtitan/blob/master/aws_ofi_rccl.sh)) to install this plugin. Simply run this script (*e.g.* `sh aws_ofi_rccl.sh`) to install the plugin (the script assumes that your ROCm version is 6.3.1; if you're using a different version, change it accordingly).
 
 ### Pretraining data
 Currently, the pretraining data consist of a combination of the following datasets:
