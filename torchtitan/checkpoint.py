@@ -408,7 +408,11 @@ class CheckpointManager:
         original_stateful_states = {k: v for k, v in states.items() if isinstance(v, Stateful)}
         logger.info(f"Loading the checkpoint at step {step}.")
         begin = time.monotonic()
-        dcp.load(states, checkpoint_id=self._create_checkpoint_id(step), process_group=self.pg)
+        dcp.load(
+            states, 
+            planner=dcp.DefaultLoadPlanner(allow_partial_load=True), 
+            checkpoint_id=self._create_checkpoint_id(step), process_group=self.pg
+            )
         logger.info(f"Finished loading the checkpoint in {time.monotonic() - begin:.2f} seconds.")
         # bugfix from above: restore the original stateful objects,
         # whose states were already updated in-place by dcp.load()
