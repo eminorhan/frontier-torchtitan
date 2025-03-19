@@ -27,7 +27,7 @@ if __name__ == "__main__":
     dcp_to_torch_save(args.input_dir, llama_path)
 
     print(f"{LogColors.RED} Loading checkpoint with torch.load {LogColors.END}")
-    x = torch.load(llama_path, map_location='cpu')
+    x = torch.load(llama_path, map_location='cpu', weights_only=False)
 
     print(f"{LogColors.RED} Saving model state_dict only with torch.save {LogColors.END}")
     torch.save(x["model"], llama_path)
