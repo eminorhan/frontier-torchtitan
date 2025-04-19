@@ -303,9 +303,7 @@ class JobConfig:
             default="1f1b",
             help="""
                 Specify the Pipeline Parallel schedule to use.
-
                 The schedule must be compatible with the split points and stages_per_rank.
-
                 Looped schedules (e.g. interleaved_1f1b) require specifying pipeline_paralle_degree = number of ranks,
                 and split_points = number of stages - 1""",
         )
@@ -315,9 +313,7 @@ class JobConfig:
             default=None,
             help="""
                 How many microbatches to split the global training batch into when using pipeline parallelism.
-
                 The global training batch size must be evenly divisible by the number of microbatches.
-
                 The default value will be the number of pipeline stages, if unspecified.
             """,
         )
@@ -340,7 +336,7 @@ class JobConfig:
             "--training.mixed_precision_reduce",
             type=str,
             default="float32",
-            choices=["float32"],
+            choices=["bfloat16", "float32"],
             help="""
                 torch dtype to use for reductions when applying mixed precision via FSDP.
                 This feature only takes effect when data_parallel_degree > 1

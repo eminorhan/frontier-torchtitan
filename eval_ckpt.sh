@@ -4,10 +4,10 @@
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-task=8
-#SBATCH --time=00:15:00
+#SBATCH --time=00:30:00
 #SBATCH --job-name=eval_ckpt
 #SBATCH --output=eval_ckpt_%A_%a.out
-#SBATCH --array=0
+#SBATCH --array=8
 #SBATCH --qos=debug
 
 # set proxy server to enable communication with outside

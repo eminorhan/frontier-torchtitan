@@ -147,7 +147,7 @@ def get_num_flop_per_token(num_params: int, model_config, seq_len) -> int:
     return flop_per_token
 
 
-# hardcoded BF16 type peak flops for NVIDIA A100 and H100 GPU
+# hardcoded BF16 type peak flops for popular NVIDIA and AMD GPUs
 def get_peak_flops(device_name: str) -> int:
     try:
         # Run the lspci command and capture the output

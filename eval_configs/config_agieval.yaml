@@ -30,7 +30,7 @@ tasks: ["agieval_en"]  # must divide into subtasks
 
 limit: null
 max_seq_length: 4096
-batch_size: 12
+batch_size: 1
 enable_kv_cache: True
 
 # Quantization specific args

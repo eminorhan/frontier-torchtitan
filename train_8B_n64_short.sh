@@ -2,10 +2,10 @@
 
 #SBATCH --account=stf218
 ##SBATCH --partition=extended
-#SBATCH --nodes=64
+#SBATCH --nodes=32
 #SBATCH --gpus-per-node=8
 #SBATCH --cpus-per-task=8
-#SBATCH --time=2:00:00
+#SBATCH --time=0:10:00
 #SBATCH --job-name=train_llama_8B_n64_short
 #SBATCH --output=train_llama_8B_n64_short_%A_%a.out
 #SBATCH --array=0
@@ -40,7 +40,7 @@ export GPUS_PER_NODE=8
 export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 export MASTER_PORT=3442
 
-CONFIG_FILE=${CONFIG_FILE:-"./train_configs/llama3_8b_n64.toml"}
+CONFIG_FILE=${CONFIG_FILE:-"./train_configs/llama3_8b_n64_short.toml"}
 SHUFFLE_SEED=$((RANDOM % 9223372036854775807))
 
 echo "Random seed: ${SHUFFLE_SEED}"

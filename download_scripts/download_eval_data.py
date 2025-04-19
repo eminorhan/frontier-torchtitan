@@ -1,6 +1,6 @@
 from datasets import load_dataset
 
-# ds = load_dataset("hails/mmlu_no_train", "all", trust_remote_code=True)
+ds = load_dataset("hails/mmlu_no_train", "all", trust_remote_code=True)
 
 # ds = load_dataset("allenai/ai2_arc", "ARC-Challenge", trust_remote_code=True)
 # ds = load_dataset("allenai/ai2_arc", "ARC-Easy", trust_remote_code=True)
@@ -16,4 +16,4 @@ from datasets import load_dataset
 # for winogrande_subset in winogrande_subsets:
 #     ds = load_dataset("allenai/winogrande", winogrande_subset, trust_remote_code=True)
 
-ds = load_dataset("Rowan/hellaswag", trust_remote_code=True)
+# ds = load_dataset("Rowan/hellaswag", trust_remote_code=True)
