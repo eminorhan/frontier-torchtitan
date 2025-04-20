@@ -14,6 +14,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert DCP to Llama.")
     parser.add_argument("--input_dir", type=Path, help="Input directory with DCP weights.")
     parser.add_argument("--output_dir", type=Path, help="Output directory for Llama weights.")
+    parser.add_argument('--hf_repo_name',default="eminorhan/smoky-llama",type=str, help='the model will be pushed to this HF repo')    
     parser.add_argument('--push_to_hub', action='store_true', help='whether to push llama ckpt to hf hub (default: false)')
     args = parser.parse_args()
 
@@ -41,7 +42,7 @@ if __name__ == "__main__":
 
         api.upload_folder(
             folder_path=args.output_dir,
-            repo_id="eminorhan/smoky-llama",
+            repo_id=args.hf_repo_name,
             path_in_repo=args.input_dir.name,
             repo_type="model",
             token=True
