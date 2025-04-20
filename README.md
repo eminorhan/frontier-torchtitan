@@ -88,6 +88,15 @@ tune run eleuther_eval --config CONFIG_FILE
 where `CONFIG_FILE` is the configuration file for the particular evaluation you want to run (see [eval_ckpt.sh](https://github.com/eminorhan/frontier-torchtitan/blob/master/eval_ckpt.sh) for concrete examples). The [`eval_configs`](https://github.com/eminorhan/frontier-torchtitan/tree/master/eval_configs) directory contains configuration files for some common evaluation tasks.
 
 ### Results
+#### Training progress
+Training data and config as described above: 64 nodes, 11M tokens globally per training step, peak learning rate: `3e-5`, planned training steps: 500K.
+
+Current training step: 73500
+
+![](assets/train_loss.jpg)
+
+Black trace is the loss tracked in 100-step bins, red trace is the loss tracked in 15000-step bins.
+
 #### Head-to-head comparison between A100 *vs.* MI250X GPUs (8 nodes)
 `torchtitan` repo provides performance benchmarks for training Llama-3 8B with context size 8192 on 64 A100 GPUs (8 nodes) [here](https://github.com/pytorch/torchtitan/blob/main/docs/performance.md). Specifically, they report a `wps` of ~2900 (tokens/second) and `mfu` of ~58% (model flops utilization) for a particular set-up. I replicated the same set-up on 8 Frontier nodes with 64 GCDs (FSDP2 only parallelism, selective (`op`-based) activation checkpointing, `layernorm` nonlinearity, no `torch.compile`, and a local batch size of 1) and observed a `wps` of ~1333 and `mfu` of ~40%. This is ~1.5-2.2x worse than the A100 results. Despite occasional [reports](https://www.databricks.com/blog/training-llms-scale-amd-mi250-gpus) I see claiming that AMD MI250X is competitive with NVIDIA A100, MI250X performs significantly worse than A100 on serious AI workloads in my experience. This difference is likely mostly due to the advantage in interconnect NVIDIA has over AMD with NVLink and NCCL (see also below).
 
