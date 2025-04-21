@@ -57,7 +57,7 @@ The shuffle is performed once at the beginning of each training session with a f
 This data loading pipeline is preferred over the one implemented in the torchtitan library ([here](https://github.com/pytorch/torchtitan/blob/main/torchtitan/datasets/hf_datasets.py)), which checkpoints a `_sample_idx` variable and attempts to skip to that idx at the beginning of the next training session, since I couldn't verify that this implementation works correctly (I observed that after resuming the checkpoint, the data loader would keep sampling some of the same data rows from the previous sessions, which should have been skipped).
 
 ### Training
-The SLURM batch script in [`train_8B_n64.sh`](https://github.com/eminorhan/frontier-torchtitan/blob/master/train_8B_n64.sh) can be used to train a Llama-3.1-8B model with a context size of 8192 tokens over 64 Frontier nodes. This script uses the training config file in [`train_configs/llama3_8b_n64.toml`](https://github.com/eminorhan/frontier-torchtitan/blob/master/train_configs/llama3_8b_n64.toml). Feel free to modify the config according to your needs.
+The SLURM batch script in [`train_8B_n64.sh`](https://github.com/eminorhan/frontier-torchtitan/blob/master/train_8B_n64.sh) can be used to train a Llama-3.1-8B model with a context size of 8192 tokens over 64 Frontier nodes. This script uses the training config file in [`train_configs/llama3_8b_n64.toml`](https://github.com/eminorhan/frontier-torchtitan/blob/master/train_configs/llama3_8b_n64.toml).
 
 ### A note on IP network interfaces
 For loading and saving distributed checkpoints, the code uses the `torch.distributed.checkpoint` (DCP) library. A new process group with the `gloo` backend is created for this purpose (separate from the process group used by `nccl` for training). In my experience, the IP network interface to be used by both `gloo` and `nccl` needs to be explicitly set to `hsn0`, *i.e.*:
@@ -89,13 +89,13 @@ where `CONFIG_FILE` is the configuration file for the particular evaluation you 
 
 ### Results
 #### Training progress
-Training data and config as described above: 64 nodes, 11M tokens globally per training step, peak learning rate: `3e-5`, planned training steps: 500K.
+Training data and config as described above: 64 nodes (512 devices), 11M tokens globally per training step, peak learning rate: `3e-5`, planned training steps: 500K, starting from the pretrained `llama-3.1-8B` checkpoint.
 
-Current training step: 73500
+**Current training step:** 73500
 
 ![](assets/train_loss.jpg)
 
-Black trace is the loss tracked in 100-step bins, red trace is the loss tracked in 15000-step bins.
+Black trace shows the loss tracked in 100-step bins, red trace shows the loss tracked in 15000-step bins.
 
 #### Head-to-head comparison between A100 *vs.* MI250X GPUs (8 nodes)
 `torchtitan` repo provides performance benchmarks for training Llama-3 8B with context size 8192 on 64 A100 GPUs (8 nodes) [here](https://github.com/pytorch/torchtitan/blob/main/docs/performance.md). Specifically, they report a `wps` of ~2900 (tokens/second) and `mfu` of ~58% (model flops utilization) for a particular set-up. I replicated the same set-up on 8 Frontier nodes with 64 GCDs (FSDP2 only parallelism, selective (`op`-based) activation checkpointing, `layernorm` nonlinearity, no `torch.compile`, and a local batch size of 1) and observed a `wps` of ~1333 and `mfu` of ~40%. This is ~1.5-2.2x worse than the A100 results. Despite occasional [reports](https://www.databricks.com/blog/training-llms-scale-amd-mi250-gpus) I see claiming that AMD MI250X is competitive with NVIDIA A100, MI250X performs significantly worse than A100 on serious AI workloads in my experience. This difference is likely mostly due to the advantage in interconnect NVIDIA has over AMD with NVLink and NCCL (see also below).
